@@ -1,0 +1,23 @@
+#ifndef LEXER_HPP
+#define LEXER_HPP
+
+#include <string>
+
+enum class TokenType {
+	tok_eof, tok_identifier, tok_symbol, tok_number,
+};
+
+struct Token {
+	TokenType type;
+	std::string str;
+	int num;
+	char symbol;
+};
+
+class Lexer {
+	char lastChar_ = ' ';
+public:
+	Token getToken();
+};
+
+#endif
