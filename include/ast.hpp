@@ -9,17 +9,17 @@ public:
 	CodegenException(std::string msg) : std::runtime_error(msg) {}
 };
 
-class Function;
-
 class Expr {
 public:
 	virtual ~Expr() {}
+	virtual int evaluate() = 0;
 };
 
 class NumberExpr : public Expr {
-	double val_;
+	int val_;
 public:
-	NumberExpr(double val) : val_(val) {}
+	NumberExpr(int val) : val_(val) {}
+	int evaluate() { return val_; }
 };
 
 // Binary operator
@@ -29,6 +29,16 @@ class BinaryExpr : public Expr {
 public:
 	BinaryExpr(char op, Expr *lhs, Expr *rhs)
 		: op_(op), lhs_(lhs), rhs_(rhs) {}
+
+	int evaluate() {
+		switch (op_) {
+			case '+': return lhs_->evaluate() + rhs_->evaluate();
+			case '-': return lhs_->evaluate() - rhs_->evaluate();
+			case '*': return lhs_->evaluate() * rhs_->evaluate();
+			case '/': return lhs_->evaluate() / rhs_->evaluate();
+			default: throw CodegenException("Unknown binary operator");
+		}
+	}
 };
 
 #endif

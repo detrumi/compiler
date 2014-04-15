@@ -15,8 +15,11 @@ struct Token {
 };
 
 class Lexer {
-	char lastChar_ = ' ';
+	std::string line_;
+	int index_;
 public:
+	char nextChar();
+	void setLine(std::string line);
 	Token getToken();
 };
 

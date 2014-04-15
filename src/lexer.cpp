@@ -1,58 +1,66 @@
 #include <string>
+#include <iostream>
 
 #include "lexer.hpp"
+
+void Lexer::setLine(std::string line) {
+	line_ = line;
+	index_ = 0;
+}
 
 // Return next token from standard input
 Token Lexer::getToken() {
 	Token token;
 
 	// Skip whitespace
-	while (isspace(lastChar_)) {
-		lastChar_ = getchar();
+	while (isspace(line_[index_])) {
+		index_++;
 	}
 
 	// Identifier: [a-zA-Z][a-zA-Z0-9]*
-	if (isalpha(lastChar_)) {
+	if (isalpha(line_[index_])) {
 		token.type = TokenType::tok_identifier;
-		token.str = lastChar_;
-		while (isalnum((lastChar_ = getchar()))) {
-			token.str += lastChar_;
+		token.str = line_[index_];
+		while (isalnum(line_[index_])) {
+			token.str += line_[index_++];
 		}
 
 		token.type = TokenType::tok_identifier;
-
+	
+		std::cout << "Lexed identifier: " << token.str << std::endl;
 		return token;
 	}
 
 	// Number: [0-9.]+
-	if (isdigit(lastChar_)) {
+	if (isdigit(line_[index_])) {
 		std::string numStr;
 		do {
-			numStr += lastChar_;
-			lastChar_ = getchar();
-		} while (isdigit(lastChar_));
+			numStr += line_[index_++];
+		} while (isdigit(line_[index_]));
 
-		token.num = strtod(numStr.c_str(), 0);
+		token.num = strtol(numStr.c_str(), 0, 10);
 		token.type = TokenType::tok_number;
+
+		std::cout << "Lexed number: " << numStr << std::endl;
 		return token;
 	}
 
 	// Comment until end of line
-	if (lastChar_ == '#') {
+	/*if (*line_ == '#') {
 		do {
-			lastChar_ = getchar();
-		} while (lastChar_ != EOF && lastChar_ != '\n' && lastChar_ != '\r');
-	}
+			nextChar();
+		} while (*line_ != EOF && *line_ != '\n' && *line_ != '\r');
+	}*/
 
-	// Check for end of file, but leave it in lastChar_
-	if (lastChar_ == EOF) {
+	// Check for end of file, but leave it in line_
+	if (line_[index_] == EOF) {
 		token.type = TokenType::tok_eof;
 		return token;
 	}
 
 	// Return character as ascii value
 	token.type = TokenType::tok_symbol;
-	token.symbol = lastChar_;
-	lastChar_ = getchar();
+	token.symbol = line_[index_++];
+	std::cout << "Lexed symbol: " << token.symbol << std::endl;
 	return token;
 }

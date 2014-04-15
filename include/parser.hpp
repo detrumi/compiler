@@ -15,18 +15,19 @@ class Parser {
 	std::map<char, int> binOpPrecedence_ =
 		{{'+',20},{'-',20},{'*',40}};
 
-	Lexer lexer_;
 public:
+	Lexer lexer_;
+
 	Token token;
 	Token getNextToken();
+
+	int parseLine(std::string line);
 
 	Expr *parseNumber();
 	Expr *parseParen();
 	Expr *parsePrimary();
 	Expr *parseBinOpRhs(int exprPrec, Expr *lhs);
 	Expr *parseExpr();
-	Function *parseDefinition();
-	Function *parseTopLevelExpr();
 };
 
 #endif
