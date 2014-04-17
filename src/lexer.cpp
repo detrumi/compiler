@@ -20,7 +20,7 @@ Token Lexer::getToken() {
 	// Identifier: [a-zA-Z][a-zA-Z0-9]*
 	if (isalpha(line_[index_])) {
 		token.type = TokenType::tok_identifier;
-		token.str = line_[index_];
+		token.str = line_[index_++];
 		while (isalnum(line_[index_])) {
 			token.str += line_[index_++];
 		}
@@ -46,11 +46,11 @@ Token Lexer::getToken() {
 	}
 
 	// Comment until end of line
-	/*if (*line_ == '#') {
+	if (line_[index_] == '#') {
 		do {
-			nextChar();
-		} while (*line_ != EOF && *line_ != '\n' && *line_ != '\r');
-	}*/
+			index_++;
+		} while (line_[index_] != EOF && line_[index_] != '\n' && line_[index_] != '\r');
+	}
 
 	// Check for end of file, but leave it in line_
 	if (line_[index_] == EOF) {

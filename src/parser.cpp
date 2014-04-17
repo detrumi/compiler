@@ -2,14 +2,16 @@
 #include <iostream>
 
 int Parser::parseLine(std::string line) {
+	std::cout << "parseLine()" << std::endl;
 	lexer_.setLine(line);
-	getNextToken();
+	eat("first token");
 	Expr *expr = parseExpr();
 	return expr->evaluate();
 }
 
 // Token buffer
-Token Parser::getNextToken() {
+Token Parser::eat(std::string msg) {
+	std::cout << "Eat " << msg << std::endl;
 	token = lexer_.getToken();
 	return token;
 }
@@ -18,71 +20,50 @@ Token Parser::getNextToken() {
 Expr *Parser::parseNumber() {
 	std::cout << "parseNumber()" << std::endl;
 	Expr *result = new NumberExpr(token.num);
-	getNextToken(); // Eat number
+	eat("number");
 	return result;
 }
 
 // (expr)
 Expr *Parser::parseParen() {
 	std::cout << "parseParen()" << std::endl;
-	getNextToken(); // Eat (
+	eat("(");
 
 	Expr *expr = parseExpr();
 
 	if (token.symbol != ')')
-		throw ParseException("expected ')'");
-	getNextToken(); // Eat )
+		throw ParseException("Expected ')'");
+	eat(")");
 	
 	return expr;
 }
 
-// num || (expr)
-Expr *Parser::parsePrimary() {
-	std::cout << "parsePrimary()" << std::endl;
-	switch (token.type) {
-		case TokenType::tok_number: 
-			return parseNumber();
-		case TokenType::tok_symbol:
-			if (token.symbol == '(') {
-				return parseParen();
-			}
-			break;
-		default: break;
+Expr *Parser::parseBinOp() {
+	std::cout << "parseBinOp()" << std::endl;
+
+	char op = token.symbol;
+	if (op != '+' && op != '-' && op != '*' && op != '/') {
+		throw ParseException("Unknown binary operator");
 	}
-	std::cout << token.symbol << std::endl;
-	throw ParseException("unknown token when expecting an expression");
-}
+	eat("op");
 
-// (op primaryExpr)*
-Expr *Parser::parseBinOpRhs(int exprPrec, Expr *lhs) {
-	std::cout << "parseBinOpRhs()" << std::endl;
-	while (1) {
-		int tokPrec = binOpPrecedence_[token.symbol];
-		if (tokPrec < exprPrec)
-			return lhs;
+	Expr *lhs = parseExpr();
+	Expr *rhs = parseExpr();
 
-		char binOp = token.symbol;
-		getNextToken(); // Eat binOp
-
-		Expr *rhs = parsePrimary();
-
-		if (token.type != TokenType::tok_symbol || token.symbol == ';')
-			return new BinaryExpr(binOp, lhs, rhs);
-
-		int nextPrec = binOpPrecedence_[token.symbol];
-		if (tokPrec < nextPrec) {
-			rhs = parseBinOpRhs(tokPrec + 1, rhs);
-		}
-
-		lhs = new BinaryExpr(binOp, lhs, rhs);
-	}
+	return new BinaryExpr(op, lhs, rhs);
 }
 
 Expr *Parser::parseExpr() {
 	std::cout << "parseExpr()" << std::endl;
-	Expr *lhs = parsePrimary();
-	if (token.symbol == ';')
-		return lhs;
-	else
-		return parseBinOpRhs(0, lhs);
+	switch (token.type) {
+		case TokenType::tok_number:
+			return parseNumber();
+		case TokenType::tok_symbol:
+			if (token.symbol == '(') {
+				return parseParen();
+			} else {
+				return parseBinOp();
+			}
+		default: throw ParseException("Unexpected token when expecting an expression");
+	}
 }

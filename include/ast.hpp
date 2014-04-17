@@ -35,7 +35,12 @@ public:
 			case '+': return lhs_->evaluate() + rhs_->evaluate();
 			case '-': return lhs_->evaluate() - rhs_->evaluate();
 			case '*': return lhs_->evaluate() * rhs_->evaluate();
-			case '/': return lhs_->evaluate() / rhs_->evaluate();
+			case '/': {
+				int rhsVal = rhs_->evaluate();
+				if (rhsVal == 0)
+					throw CodegenException("Divide by 0 error");
+				return lhs_->evaluate() / rhsVal;
+			}
 			default: throw CodegenException("Unknown binary operator");
 		}
 	}

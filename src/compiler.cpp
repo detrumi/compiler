@@ -2,16 +2,17 @@
 #include "parser.hpp"
 
 void mainLoop(Parser &parser) {
-//	Lexer lexer;
 	while (1) {
-		fprintf(stderr, "ready> ");
-		std::string line;
-		std::getline(std::cin, line);
-//		lexer.setLine(line);
-//		for (int i = 0; i < 10; i++) {
-//			std::cout << lexer.getToken().symbol << std::endl;
-//		}
-		std::cout << "Result: " << parser.parseLine(line) << std::endl;
+		try {
+			fprintf(stderr, "ready> ");
+			std::string line;
+			std::getline(std::cin, line);
+			std::cout << "Result: " << parser.parseLine(line) << std::endl;
+		} catch (ParseException ex) {
+			std::cout << ex.what() << std::endl;
+		} catch (CodegenException ex) {
+			std::cout << ex.what() << std::endl;
+		}
 	}
 }
 
