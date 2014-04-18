@@ -2,6 +2,7 @@
 #define PARSER_HPP
 
 #include <map>
+#include <stdexcept>
 
 #include "ast.hpp"
 #include "lexer.hpp"
@@ -16,14 +17,14 @@ public:
 	Lexer lexer_;
 
 	Token token;
-	Token eat(std::string msg);
+	Token eat();
 
 	int parseLine(std::string line);
 
-	Expr *parseNumber();
-	Expr *parseParen();
-	Expr *parseBinOp();
-	Expr *parseExpr();
+	ExprPtr parseNumber();
+	ExprPtr parseParen();
+	ExprPtr parseBinOp();
+	ExprPtr parseExpr();
 };
 
 #endif

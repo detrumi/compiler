@@ -27,7 +27,6 @@ Token Lexer::getToken() {
 
 		token.type = TokenType::tok_identifier;
 	
-		std::cout << "Lexed identifier: " << token.str << std::endl;
 		return token;
 	}
 
@@ -41,7 +40,6 @@ Token Lexer::getToken() {
 		token.num = strtol(numStr.c_str(), 0, 10);
 		token.type = TokenType::tok_number;
 
-		std::cout << "Lexed number: " << numStr << std::endl;
 		return token;
 	}
 
@@ -55,12 +53,12 @@ Token Lexer::getToken() {
 	// Check for end of file, but leave it in line_
 	if (line_[index_] == EOF) {
 		token.type = TokenType::tok_eof;
+		exit(0);
 		return token;
 	}
 
 	// Return character as ascii value
 	token.type = TokenType::tok_symbol;
 	token.symbol = line_[index_++];
-	std::cout << "Lexed symbol: " << token.symbol << std::endl;
 	return token;
 }

@@ -2,59 +2,49 @@
 #include <iostream>
 
 int Parser::parseLine(std::string line) {
-	std::cout << "parseLine()" << std::endl;
 	lexer_.setLine(line);
-	eat("first token");
-	Expr *expr = parseExpr();
+	eat();
+	ExprPtr expr = parseExpr();
 	return expr->evaluate();
 }
 
 // Token buffer
-Token Parser::eat(std::string msg) {
-	std::cout << "Eat " << msg << std::endl;
-	token = lexer_.getToken();
-	return token;
+Token Parser::eat() {
+	return token = lexer_.getToken();
 }
 
-
-Expr *Parser::parseNumber() {
-	std::cout << "parseNumber()" << std::endl;
-	Expr *result = new NumberExpr(token.num);
-	eat("number");
+ExprPtr Parser::parseNumber() {
+	ExprPtr result = ExprPtr(new NumberExpr(token.num));
+	eat(); // Eat number
 	return result;
 }
 
-// (expr)
-Expr *Parser::parseParen() {
-	std::cout << "parseParen()" << std::endl;
-	eat("(");
+ExprPtr Parser::parseParen() {
+	eat(); // Eat (
 
-	Expr *expr = parseExpr();
+	ExprPtr expr = parseExpr();
 
 	if (token.symbol != ')')
 		throw ParseException("Expected ')'");
-	eat(")");
+	eat(); // Eat )
 	
 	return expr;
 }
 
-Expr *Parser::parseBinOp() {
-	std::cout << "parseBinOp()" << std::endl;
-
+ExprPtr Parser::parseBinOp() {
 	char op = token.symbol;
 	if (op != '+' && op != '-' && op != '*' && op != '/') {
 		throw ParseException("Unknown binary operator");
 	}
-	eat("op");
+	eat(); // Eat operator
 
-	Expr *lhs = parseExpr();
-	Expr *rhs = parseExpr();
+	ExprPtr lhs = parseExpr();
+	ExprPtr rhs = parseExpr();
 
-	return new BinaryExpr(op, lhs, rhs);
+	return ExprPtr(new BinaryExpr(op, std::move(lhs), std::move(rhs)));
 }
 
-Expr *Parser::parseExpr() {
-	std::cout << "parseExpr()" << std::endl;
+ExprPtr Parser::parseExpr() {
 	switch (token.type) {
 		case TokenType::tok_number:
 			return parseNumber();

@@ -2,12 +2,15 @@
 #include "parser.hpp"
 
 void mainLoop(Parser &parser) {
-	while (1) {
+	while (std::cin) {
 		try {
-			fprintf(stderr, "ready> ");
+			std::cout << ">>> ";
+
 			std::string line;
 			std::getline(std::cin, line);
-			std::cout << "Result: " << parser.parseLine(line) << std::endl;
+			if (line.length() > 0) {
+				std::cout << parser.parseLine(line) << std::endl;
+			}
 		} catch (ParseException ex) {
 			std::cout << ex.what() << std::endl;
 		} catch (CodegenException ex) {
@@ -19,4 +22,5 @@ void mainLoop(Parser &parser) {
 int main() {
 	Parser parser;
 	mainLoop(parser);
+	std::cout << std::endl;
 }

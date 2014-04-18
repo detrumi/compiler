@@ -3,6 +3,11 @@
 
 #include <string>
 #include <vector>
+#include <stdexcept>
+#include <memory>
+
+class Expr;
+typedef std::unique_ptr<Expr> ExprPtr;
 
 class CodegenException : public std::runtime_error {
 public:
@@ -22,13 +27,12 @@ public:
 	int evaluate() { return val_; }
 };
 
-// Binary operator
 class BinaryExpr : public Expr {
 	char op_;
-	Expr *lhs_, *rhs_;
+	ExprPtr lhs_, rhs_;
 public:
-	BinaryExpr(char op, Expr *lhs, Expr *rhs)
-		: op_(op), lhs_(lhs), rhs_(rhs) {}
+	BinaryExpr(char op, ExprPtr lhs, ExprPtr rhs)
+		: op_(op), lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
 
 	int evaluate() {
 		switch (op_) {
