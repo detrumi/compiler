@@ -46,9 +46,9 @@ ExprPtr Parser::parseBinOp() {
 
 ExprPtr Parser::parseExpr() {
 	switch (token.type) {
-		case TokenType::tok_number:
+		case TokenType::number:
 			return parseNumber();
-		case TokenType::tok_symbol:
+		case TokenType::symbol:
 			if (token.symbol == '(') {
 				return parseParen();
 			} else {

@@ -4,7 +4,7 @@
 #include <string>
 
 enum class TokenType {
-	tok_eof, tok_identifier, tok_symbol, tok_number,
+	eof, identifier, symbol, number,
 };
 
 struct Token {
