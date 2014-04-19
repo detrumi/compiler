@@ -1,7 +1,8 @@
 #include <iostream>
 #include "parser.hpp"
 
-void mainLoop(Parser &parser) {
+int main() {
+	Parser parser;
 	while (std::cin) {
 		try {
 			std::cout << ">>> ";
@@ -17,10 +18,5 @@ void mainLoop(Parser &parser) {
 			std::cout << ex.what() << std::endl;
 		}
 	}
-}
-
-int main() {
-	Parser parser;
-	mainLoop(parser);
 	std::cout << std::endl;
 }
