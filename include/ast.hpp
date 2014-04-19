@@ -2,11 +2,12 @@
 #define AST_HPP
 
 #include <string>
-#include <vector>
 #include <stdexcept>
 #include <memory>
 
 class Expr;
+class Environment;
+
 typedef std::unique_ptr<Expr> ExprPtr;
 
 class CodegenException : public std::runtime_error {
@@ -17,14 +18,14 @@ public:
 class Expr {
 public:
 	virtual ~Expr() {}
-	virtual int evaluate() = 0;
+	virtual int evaluate(Environment &) = 0;
 };
 
 class NumberExpr : public Expr {
 	int val_;
 public:
 	NumberExpr(int val) : val_(val) {}
-	int evaluate() { return val_; }
+	int evaluate(Environment &) { return val_; }
 };
 
 class BinaryExpr : public Expr {
@@ -34,20 +35,15 @@ public:
 	BinaryExpr(char op, ExprPtr lhs, ExprPtr rhs)
 		: op_(op), lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
 
-	int evaluate() {
-		switch (op_) {
-			case '+': return lhs_->evaluate() + rhs_->evaluate();
-			case '-': return lhs_->evaluate() - rhs_->evaluate();
-			case '*': return lhs_->evaluate() * rhs_->evaluate();
-			case '/': {
-				int rhsVal = rhs_->evaluate();
-				if (rhsVal == 0)
-					throw CodegenException("Divide by 0 error");
-				return lhs_->evaluate() / rhsVal;
-			}
-			default: throw CodegenException("Unknown binary operator");
-		}
-	}
+	int evaluate(Environment &env);
+};
+
+class VarExpr : public Expr {
+	std::string name_;
+public:
+	VarExpr(std::string name) : name_(std::move(name)) {}
+
+	int evaluate(Environment &env);
 };
 
 #endif

@@ -1,32 +1,31 @@
 #include "parser.hpp"
 #include <iostream>
 
-int Parser::parseLine(std::string line) {
-	lexer_.setLine(line);
-	eat();
-	ExprPtr expr = parseExpr();
-	return expr->evaluate();
+// Token buffer
+Token Parser::getToken() {
+	return token = lexer_.getToken();
 }
 
-// Token buffer
-Token Parser::eat() {
-	return token = lexer_.getToken();
+DefPtr Parser::parseLine(std::string line) {
+	lexer_.setLine(line);
+	getToken(); // Get first token
+	return parseDef();
 }
 
 ExprPtr Parser::parseNumber() {
 	ExprPtr result = ExprPtr(new NumberExpr(token.num));
-	eat(); // Eat number
+	getToken(); // Eat number
 	return result;
 }
 
 ExprPtr Parser::parseParen() {
-	eat(); // Eat (
+	getToken(); // Eat (
 
 	ExprPtr expr = parseExpr();
 
 	if (token.symbol != ')')
 		throw ParseException("Expected ')'");
-	eat(); // Eat )
+	getToken(); // Eat )
 	
 	return expr;
 }
@@ -36,7 +35,7 @@ ExprPtr Parser::parseBinOp() {
 	if (op != '+' && op != '-' && op != '*' && op != '/') {
 		throw ParseException("Unknown binary operator");
 	}
-	eat(); // Eat operator
+	getToken(); // Eat operator
 
 	ExprPtr lhs = parseExpr();
 	ExprPtr rhs = parseExpr();
@@ -54,6 +53,35 @@ ExprPtr Parser::parseExpr() {
 			} else {
 				return parseBinOp();
 			}
+		case TokenType::identifier:
+			return ExprPtr(new VarExpr(token.str));
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
+}
+
+
+DefPtr Parser::parseDef() {
+	if (token.type == TokenType::identifier && token.str == "def") {
+		getToken(); // Eat 'def'
+
+		if (token.type != TokenType::identifier) {
+			throw ParseException("Excepted function name after 'def'");
+		}
+		std::string name = token.str;
+		getToken();
+
+		std::vector<std::string> args;
+		while (token.type == TokenType::identifier) {
+			args.push_back(token.str);
+			getToken();
+		}
+
+		if (token.type != TokenType::symbol || token.symbol != '=') {
+			throw ParseException("Expected '=' in definition");
+		}
+		getToken();
+
+		return DefPtr(new Definition(std::move(name), std::move(args), parseExpr()));
+	}
+	return DefPtr(new Definition(parseExpr()));
 }

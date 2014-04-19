@@ -6,6 +6,7 @@
 
 #include "ast.hpp"
 #include "lexer.hpp"
+#include "definition.hpp"
 
 class ParseException : public std::runtime_error {
 public:
@@ -17,14 +18,15 @@ public:
 	Lexer lexer_;
 
 	Token token;
-	Token eat();
+	Token getToken();
 
-	int parseLine(std::string line);
+	DefPtr parseLine(std::string line);
 
 	ExprPtr parseNumber();
 	ExprPtr parseParen();
 	ExprPtr parseBinOp();
 	ExprPtr parseExpr();
+	DefPtr parseDef();
 };
 
 #endif
