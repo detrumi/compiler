@@ -23,7 +23,7 @@ ExprPtr Parser::parseParen() {
 
 	ExprPtr expr = parseExpr();
 
-	if (token.symbol != ')')
+	if (token.type != TokenType::symbol || token.symbol != ')')
 		throw ParseException("Expected ')'");
 	getToken(); // Eat )
 	
@@ -53,8 +53,11 @@ ExprPtr Parser::parseExpr() {
 			} else {
 				return parseBinOp();
 			}
-		case TokenType::identifier:
-			return ExprPtr(new VarExpr(token.str));
+		case TokenType::identifier: {
+			auto str = token.str;
+			getToken();
+			return ExprPtr(new VarExpr(str));
+		}
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
 }
