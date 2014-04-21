@@ -24,8 +24,8 @@ public:
 
 	ExprPtr parseNumber();
 	ExprPtr parseParen();
-	ExprPtr parseCall();
-	ExprPtr parseExpr();
+	ExprPtr parseCall(bool inCall = false);
+	ExprPtr parseExpr(bool inCall = false);
 	DefPtr parseDef();
 };
 

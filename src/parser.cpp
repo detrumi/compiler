@@ -30,23 +30,22 @@ ExprPtr Parser::parseParen() {
 	return expr;
 }
 
-ExprPtr Parser::parseCall() {
+ExprPtr Parser::parseCall(bool inCall) {
 	std::string name = token.str;
 	getToken(); // Eat function name
 
-	// TODO check number of arguments for this function (otherwise, '+ f 2' -> f has 2 as argument)
-	// Alternative: remember when you're in a function call, and don't parse arguments until ( or ) is encountered
-
 	std::vector<ExprPtr> args;
-	while (token.type != TokenType::eof && token.type != TokenType::endl
-		&& (token.type != TokenType::symbol || token.str != ")")) {
-		args.push_back(std::move(parseExpr()));
+	if (!inCall) {
+		while (token.type != TokenType::eof && token.type != TokenType::endl
+			&& (token.type != TokenType::symbol || token.str != ")")) {
+			args.push_back(std::move(parseExpr(true)));
+		}
 	}
 
 	return ExprPtr(new CallExpr(name, std::move(args)));
 }
 
-ExprPtr Parser::parseExpr() {
+ExprPtr Parser::parseExpr(bool inCall) {
 	switch (token.type) {
 		case TokenType::number:
 			return parseNumber();
@@ -54,10 +53,10 @@ ExprPtr Parser::parseExpr() {
 			if (token.str == "(") {
 				return parseParen();
 			} else {
-				return parseCall();
+				return parseCall(inCall);
 			}
 		case TokenType::identifier: {
-			return parseCall();
+			return parseCall(inCall);
 		}
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
