@@ -2,6 +2,7 @@
 #define AST_HPP
 
 #include <string>
+#include <vector>
 #include <stdexcept>
 #include <memory>
 
@@ -28,20 +29,12 @@ public:
 	int evaluate(Environment &) { return val_; }
 };
 
-class BinaryExpr : public Expr {
-	char op_;
-	ExprPtr lhs_, rhs_;
-public:
-	BinaryExpr(char op, ExprPtr lhs, ExprPtr rhs)
-		: op_(op), lhs_(std::move(lhs)), rhs_(std::move(rhs)) {}
-
-	int evaluate(Environment &env);
-};
-
-class VarExpr : public Expr {
+class CallExpr : public Expr {
 	std::string name_;
+	std::vector<ExprPtr> args_;
 public:
-	VarExpr(std::string name) : name_(std::move(name)) {}
+	CallExpr(std::string name, std::vector<ExprPtr> args)
+		: name_(name), args_(std::move(args)) {}
 
 	int evaluate(Environment &env);
 };

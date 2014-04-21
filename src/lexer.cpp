@@ -12,6 +12,11 @@ void Lexer::setLine(std::string line) {
 Token Lexer::getToken() {
 	Token token;
 
+	if (line_[index_] == '\n') {
+		token.type = TokenType::endl;
+		return token;
+	}
+
 	// Skip whitespace
 	while (isspace(line_[index_])) {
 		index_++;
@@ -53,12 +58,11 @@ Token Lexer::getToken() {
 	// Check for end of file, but leave it in line_
 	if (line_[index_] == EOF) {
 		token.type = TokenType::eof;
-		exit(0);
 		return token;
 	}
 
 	// Return character as ascii value
 	token.type = TokenType::symbol;
-	token.symbol = line_[index_++];
+	token.str = line_[index_++];
 	return token;
 }

@@ -24,7 +24,7 @@ public:
 
 	ExprPtr parseNumber();
 	ExprPtr parseParen();
-	ExprPtr parseBinOp();
+	ExprPtr parseCall();
 	ExprPtr parseExpr();
 	DefPtr parseDef();
 };

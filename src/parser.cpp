@@ -7,7 +7,7 @@ Token Parser::getToken() {
 }
 
 DefPtr Parser::parseLine(std::string line) {
-	lexer_.setLine(line);
+	lexer_.setLine(line + "\n");
 	getToken(); // Get first token
 	return parseDef();
 }
@@ -23,24 +23,27 @@ ExprPtr Parser::parseParen() {
 
 	ExprPtr expr = parseExpr();
 
-	if (token.type != TokenType::symbol || token.symbol != ')')
+	if (token.type != TokenType::symbol || token.str != ")")
 		throw ParseException("Expected ')'");
 	getToken(); // Eat )
 	
 	return expr;
 }
 
-ExprPtr Parser::parseBinOp() {
-	char op = token.symbol;
-	if (op != '+' && op != '-' && op != '*' && op != '/') {
-		throw ParseException("Unknown binary operator");
+ExprPtr Parser::parseCall() {
+	std::string name = token.str;
+	getToken(); // Eat function name
+
+	// TODO check number of arguments for this function (otherwise, '+ f 2' -> f has 2 as argument)
+	// Alternative: remember when you're in a function call, and don't parse arguments until ( or ) is encountered
+
+	std::vector<ExprPtr> args;
+	while (token.type != TokenType::eof && token.type != TokenType::endl
+		&& (token.type != TokenType::symbol || token.str != ")")) {
+		args.push_back(std::move(parseExpr()));
 	}
-	getToken(); // Eat operator
 
-	ExprPtr lhs = parseExpr();
-	ExprPtr rhs = parseExpr();
-
-	return ExprPtr(new BinaryExpr(op, std::move(lhs), std::move(rhs)));
+	return ExprPtr(new CallExpr(name, std::move(args)));
 }
 
 ExprPtr Parser::parseExpr() {
@@ -48,15 +51,13 @@ ExprPtr Parser::parseExpr() {
 		case TokenType::number:
 			return parseNumber();
 		case TokenType::symbol:
-			if (token.symbol == '(') {
+			if (token.str == "(") {
 				return parseParen();
 			} else {
-				return parseBinOp();
+				return parseCall();
 			}
 		case TokenType::identifier: {
-			auto str = token.str;
-			getToken();
-			return ExprPtr(new VarExpr(str));
+			return parseCall();
 		}
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
@@ -79,7 +80,7 @@ DefPtr Parser::parseDef() {
 			getToken();
 		}
 
-		if (token.type != TokenType::symbol || token.symbol != '=') {
+		if (token.type != TokenType::symbol || token.str != "=") {
 			throw ParseException("Expected '=' in definition");
 		}
 		getToken();

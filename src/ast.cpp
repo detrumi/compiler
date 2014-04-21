@@ -1,22 +1,30 @@
 #include <iostream>
+#include <numeric>
 #include "ast.hpp"
 #include "environment.hpp"
 
-int BinaryExpr::evaluate(Environment &env) {
-	switch (op_) {
-		case '+': return lhs_->evaluate(env) + rhs_->evaluate(env);
-		case '-': return lhs_->evaluate(env) - rhs_->evaluate(env);
-		case '*': return lhs_->evaluate(env) * rhs_->evaluate(env);
-		case '/': {
-			int rhsVal = rhs_->evaluate(env);
-			if (rhsVal == 0)
+int CallExpr::evaluate(Environment &env) {
+	if (name_ == "+") {
+		return std::accumulate(std::begin(args_), std::end(args_), 0, [&](int res, ExprPtr &e){
+			return res + e->evaluate(env);
+		});
+	} else if (name_ == "-") {
+		return std::accumulate(std::begin(args_), std::end(args_), 0, [&](int res, ExprPtr &e) {
+			return res - e->evaluate(env);
+		});
+	} else if (name_ == "*") {
+		return std::accumulate(std::begin(args_), std::end(args_), 1, [&](int res, ExprPtr &e) {
+			return res * e->evaluate(env);
+		});
+	} else if (name_ == "/") {
+		return std::accumulate(std::begin(args_) + 1, std::end(args_), args_[0]->evaluate(env), [&](int res, ExprPtr &e) {
+			int rhs = e->evaluate(env);
+			if (e == 0) {
 				throw CodegenException("Divide by 0 error");
-			return lhs_->evaluate(env) / rhsVal;
-		}
-		default: throw CodegenException("Unknown binary operator");
+			}
+			return res / rhs;
+		});
+	} else {
+		return env[name_]->evaluateDef(env);
 	}
-}
-
-int VarExpr::evaluate(Environment &env) {
-	return env[name_]->evaluateDef(env);
 }
