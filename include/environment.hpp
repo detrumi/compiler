@@ -12,11 +12,12 @@ class Environment
 	std::stack<std::map<std::string, ExprPtr>> arguments_;
 public:
 	void addDefinition(DefPtr definition);
+	Definition& getDefinition(std::string &name);
+
 	void pushArgs(std::vector<std::string> &argNames, std::vector<ExprPtr> &values);
 	void popArgs();
-	Definition& getDef(std::string &name);
-	bool hasArgs();
-	std::map<std::string, ExprPtr> &getArgs();
+
+	ExprPtr *getArg(std::string name);
 };
 
 #endif

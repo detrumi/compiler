@@ -4,13 +4,8 @@
 #include "environment.hpp"
 
 int CallExpr::evaluate(Environment &env) {
-	if (env.hasArgs()) {
-		auto &args = env.getArgs();
-
-		auto x = args.find(name_);
-		if (x != args.end()) { // Evaluate argument
-			return x->second->evaluate(env);
-		}
+	if (auto arg = env.getArg(name_)) { // Evaluate argument
+		return (*arg)->evaluate(env);
 	}
 
 	if (name_ == "+") {
@@ -34,7 +29,7 @@ int CallExpr::evaluate(Environment &env) {
 			return res / rhs;
 		});
 	} else {
-		Definition &def = env.getDef(name_);
+		Definition &def = env.getDefinition(name_);
 		return def.evaluateDef(env, args_);
 	}
 }

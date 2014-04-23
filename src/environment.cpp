@@ -5,6 +5,14 @@ void Environment::addDefinition(DefPtr definition) {
 	definitions_[name] = std::move(definition);
 }
 
+Definition& Environment::getDefinition(std::string &name) {
+	auto def = definitions_.find(name);
+	if (def == definitions_.end()) {
+		throw CodegenException("Undefined variable '" + name + "'");
+	}
+	return *def->second;
+}
+
 void Environment::pushArgs(std::vector<std::string> &argNames, std::vector<ExprPtr> &values) {
 	std::map<std::string, ExprPtr> argMap;
 	for (size_t i = 0; i < argNames.size(); ++i) {
@@ -17,18 +25,14 @@ void Environment::popArgs() {
 	arguments_.pop();
 }
 
-Definition& Environment::getDef(std::string &name) {
-	auto def = definitions_.find(name);
-	if (def == definitions_.end()) {
-		throw CodegenException("Undefined variable '" + name + "'");
+ExprPtr *Environment::getArg(std::string name) {
+	if (arguments_.size() != 0) {
+		auto &args = arguments_.top();
+
+		auto x = args.find(name);
+		if (x != args.end()) {
+			return &x->second;
+		}
 	}
-	return *def->second;
-}
-
-bool Environment::hasArgs() {
-	return arguments_.size() != 0;
-}
-
-std::map<std::string, ExprPtr> &Environment::getArgs() {
-	return arguments_.top();
+	return nullptr;
 }
