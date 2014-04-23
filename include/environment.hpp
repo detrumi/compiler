@@ -15,12 +15,12 @@ public:
 		definitions_[name] = std::move(definition);
 	}
 
-	DefPtr& operator[](std::string &name) {
+	Definition& getDef(std::string &name) {
 		auto def = definitions_.find(name);
 		if (def == definitions_.end()) {
 			throw CodegenException("Undefined variable '" + name + "'");
 		}
-		return def->second;
+		return *def->second;
 	}
 };
 

@@ -3,8 +3,8 @@
 #include "environment.hpp"
 
 int main() {
-	Parser parser;
 	Environment env;
+	Parser parser(env);
 	while (std::cin) {
 		try {
 			std::cout << ">>> ";
@@ -12,12 +12,7 @@ int main() {
 			std::string line;
 			std::getline(std::cin, line);
 			if (line.length() > 0) {
-				DefPtr def = parser.parseLine(line);
-				if (def->getName() == "") { // Not a function; directly print answer
-					std::cout << def->evaluateDef(env) << std::endl;
-				} else {
-					env.addDefinition(std::move(def));
-				}
+				parser.parseLine(line);
 			}
 		} catch (ParseException ex) {
 			std::cout << ex.what() << std::endl;

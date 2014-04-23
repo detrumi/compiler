@@ -25,6 +25,6 @@ int CallExpr::evaluate(Environment &env) {
 			return res / rhs;
 		});
 	} else {
-		return env[name_]->evaluateDef(env);
+		return env.getDef(name_).evaluateDef(env);
 	}
 }

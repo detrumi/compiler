@@ -1,15 +1,24 @@
-#include "parser.hpp"
 #include <iostream>
+
+#include "parser.hpp"
+#include "environment.hpp"
 
 // Token buffer
 Token Parser::getToken() {
 	return token = lexer_.getToken();
 }
 
-DefPtr Parser::parseLine(std::string line) {
+void Parser::parseLine(std::string line) {
 	lexer_.setLine(line + "\n");
 	getToken(); // Get first token
-	return parseDef();
+
+	if (token.type == TokenType::identifier && token.str == "def") {
+		DefPtr def = parseDef();
+		env_.addDefinition(std::move(def));
+	} else { // Top-level expression, return definition without name
+		std::cout << parseExpr()->evaluate(env_) << std::endl;
+	}
+
 }
 
 ExprPtr Parser::parseNumber() {
@@ -64,27 +73,24 @@ ExprPtr Parser::parseExpr(bool inCall) {
 
 
 DefPtr Parser::parseDef() {
-	if (token.type == TokenType::identifier && token.str == "def") {
-		getToken(); // Eat 'def'
+	getToken(); // Eat 'def'
 
-		if (token.type != TokenType::identifier) {
-			throw ParseException("Excepted function name after 'def'");
-		}
-		std::string name = token.str;
-		getToken();
-
-		std::vector<std::string> args;
-		while (token.type == TokenType::identifier) {
-			args.push_back(token.str);
-			getToken();
-		}
-
-		if (token.type != TokenType::symbol || token.str != "=") {
-			throw ParseException("Expected '=' in definition");
-		}
-		getToken();
-
-		return DefPtr(new Definition(std::move(name), std::move(args), parseExpr()));
+	if (token.type != TokenType::identifier) {
+		throw ParseException("Excepted function name after 'def'");
 	}
-	return DefPtr(new Definition(parseExpr()));
+	std::string name = token.str;
+	getToken(); // Eat name
+
+	std::vector<std::string> args;
+	while (token.type == TokenType::identifier) {
+		args.push_back(token.str);
+		getToken();
+	}
+
+	if (token.type != TokenType::symbol || token.str != "=") {
+		throw ParseException("Expected '=' in definition");
+	}
+	getToken(); // Eat =
+
+	return DefPtr(new Definition(std::move(name), std::move(args), parseExpr()));
 }

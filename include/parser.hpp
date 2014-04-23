@@ -14,13 +14,15 @@ public:
 };
 
 class Parser {
-public:
 	Lexer lexer_;
+	Environment &env_;
+public:
+	Parser(Environment &env) : env_(env) {}
 
 	Token token;
 	Token getToken();
 
-	DefPtr parseLine(std::string line);
+	void parseLine(std::string line);
 
 	ExprPtr parseNumber();
 	ExprPtr parseParen();
