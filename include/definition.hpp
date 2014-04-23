@@ -20,7 +20,7 @@ public:
 
 	std::string getName() { return name_; }
 
-	int evaluateDef(Environment &env);
+	int evaluateDef(Environment &env, std::vector<ExprPtr> &args);
 };
 
 #endif
