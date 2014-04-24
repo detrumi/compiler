@@ -15,10 +15,9 @@ void Parser::parseLine(std::string line) {
 	if (token.type == TokenType::identifier && token.str == "def") {
 		DefPtr def = parseDef();
 		env_.addDefinition(std::move(def));
-	} else { // Top-level expression, return definition without name
+	} else if (token.type != TokenType::endl && token.type != TokenType::eof) { // Top-level expression, return definition without name
 		std::cout << parseExpr()->evaluate(env_) << std::endl;
 	}
-
 }
 
 ExprPtr Parser::parseNumber() {

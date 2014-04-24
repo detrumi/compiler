@@ -52,7 +52,9 @@ Token Lexer::getToken() {
 	if (line_[index_] == '#') {
 		do {
 			index_++;
-		} while (line_[index_] != EOF && line_[index_] != '\n' && line_[index_] != '\r');
+		} while (line_[index_] != EOF && line_[index_] != '\n');
+		token.type = TokenType::endl;
+		return token;
 	}
 
 	// Check for end of file, but leave it in line_
