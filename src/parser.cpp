@@ -13,7 +13,7 @@ void Parser::parseLine(std::string line) {
 	getToken(); // Get first token
 
 	if (token.type == TokenType::identifier && token.str == "def") {
-		DefPtr def = parseDef();
+		Definition def = parseDef();
 		env_.addDefinition(std::move(def));
 	} else if (token.type != TokenType::endl && token.type != TokenType::eof) { // Top-level expression, return definition without name
 		std::cout << parseExpr()->evaluate(env_) << std::endl;
@@ -71,7 +71,7 @@ ExprPtr Parser::parseExpr(bool inCall) {
 }
 
 
-DefPtr Parser::parseDef() {
+Definition Parser::parseDef() {
 	getToken(); // Eat 'def'
 
 	if (token.type != TokenType::identifier) {
@@ -91,5 +91,5 @@ DefPtr Parser::parseDef() {
 	}
 	getToken(); // Eat =
 
-	return DefPtr(new Definition(std::move(name), std::move(args), parseExpr()));
+	return Definition(std::move(name), std::move(args), parseExpr());
 }

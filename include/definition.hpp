@@ -7,7 +7,6 @@
 #include "ast.hpp"
 
 class Definition;
-typedef std::unique_ptr<Definition> DefPtr;
 
 class Definition {
 	std::string name_;

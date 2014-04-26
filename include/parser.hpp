@@ -28,7 +28,7 @@ public:
 	ExprPtr parseParen();
 	ExprPtr parseCall(bool inCall = false);
 	ExprPtr parseExpr(bool inCall = false);
-	DefPtr parseDef();
+	Definition parseDef();
 };
 
 #endif

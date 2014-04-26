@@ -1,8 +1,8 @@
 #include "environment.hpp"
 
-void Environment::addDefinition(DefPtr definition) {
-	std::string name = definition->getName();
-	definitions_[name] = std::move(definition);
+void Environment::addDefinition(Definition definition) {
+	std::string name = definition.getName();
+	definitions_.emplace(std::make_pair(name, std::move(definition)));
 }
 
 Definition& Environment::getDefinition(std::string &name) {
@@ -10,7 +10,7 @@ Definition& Environment::getDefinition(std::string &name) {
 	if (def == definitions_.end()) {
 		throw CodegenException("Undefined variable '" + name + "'");
 	}
-	return *def->second;
+	return def->second;
 }
 
 void Environment::pushArgs(std::vector<std::string> &argNames, std::vector<ExprPtr> &values) {
