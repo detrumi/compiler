@@ -38,22 +38,55 @@ ExprPtr Parser::parseParen() {
 	return expr;
 }
 
-ExprPtr Parser::parseCall(bool inCall) {
+ExprPtr Parser::parseCall() {
 	std::string name = token.str;
+
 	getToken(); // Eat function name
 
+	bool isParam = false;
+	if (paramStack_.size() > 0) {
+		auto params = paramStack_.top();
+		isParam = params.find(name) != params.end();
+	}
+
 	std::vector<ExprPtr> args;
-	if (!inCall) {
-		while (token.type != TokenType::eof && token.type != TokenType::endl
+	if (!isParam) {
+		int paramCount = env_.getDefinition(name).paramCount();
+		// TODO give Definition& to a CallExpr instead of just its name
+
+		while (paramCount-- > 0 && token.type != TokenType::eof && token.type != TokenType::endl
 			&& (token.type != TokenType::symbol || token.str != ")")) {
-			args.push_back(std::move(parseExpr(true)));
+			args.push_back(std::move(parsePrimary()));
 		}
 	}
 
 	return ExprPtr(new CallExpr(name, std::move(args)));
 }
 
-ExprPtr Parser::parseExpr(bool inCall) {
+ExprPtr Parser::parseExpr(int prec) {
+	ExprPtr lhs = parsePrimary();
+
+	decltype(opPrecedence_.begin()) it;
+	while (token.type == TokenType::symbol && 
+		(it = opPrecedence_.find(token.str[0])) != opPrecedence_.end()) {
+		int newPrec = it->second;
+		if (newPrec < prec) {
+			break;
+		}
+
+		std::string op = token.str;
+		getToken(); // Eat operator
+
+		std::vector<ExprPtr> args;
+		args.push_back(std::move(lhs));
+		args.push_back(std::move(parseExpr(newPrec + 1)));
+
+		lhs = ExprPtr(new CallExpr(op, std::move(args)));
+	}
+	return std::move(lhs);
+}
+
+ExprPtr Parser::parsePrimary() {
 	switch (token.type) {
 		case TokenType::number:
 			return parseNumber();
@@ -61,10 +94,10 @@ ExprPtr Parser::parseExpr(bool inCall) {
 			if (token.str == "(") {
 				return parseParen();
 			} else {
-				return parseCall(inCall);
+				return parseCall();
 			}
 		case TokenType::identifier: {
-			return parseCall(inCall);
+			return parseCall();
 		}
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
@@ -80,9 +113,9 @@ Definition Parser::parseDef() {
 	std::string name = token.str;
 	getToken(); // Eat name
 
-	std::vector<std::string> args;
+	std::vector<std::string> params;
 	while (token.type == TokenType::identifier) {
-		args.push_back(token.str);
+		params.push_back(token.str);
 		getToken();
 	}
 
@@ -91,5 +124,8 @@ Definition Parser::parseDef() {
 	}
 	getToken(); // Eat =
 
-	return Definition(std::move(name), std::move(args), parseExpr());
+	paramStack_.push(std::set<std::string>(params.begin(), params.end()));;
+	Definition def =  Definition(std::move(name), std::move(params), parseExpr());
+	paramStack_.pop();
+	return def;
 }

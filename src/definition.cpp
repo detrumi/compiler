@@ -8,7 +8,8 @@ std::string &Definition::getName() {
 }
 
 int Definition::evaluateDef(Environment &env, std::vector<ExprPtr> &args) {
-	env.pushArgs(argNames_, args);
-	return body_->evaluate(env);
+	env.pushArgs(params_, args);
+	int result = body_->evaluate(env);
 	env.popArgs();
+	return result;
 }

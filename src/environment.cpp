@@ -1,7 +1,10 @@
 #include "environment.hpp"
 
+#include <iostream>
+
 void Environment::addDefinition(Definition definition) {
 	std::string name = definition.getName();
+	definitions_.erase(name); // TODO replace instead of remove and add
 	definitions_.emplace(std::make_pair(name, std::move(definition)));
 }
 

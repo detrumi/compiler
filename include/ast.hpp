@@ -9,7 +9,7 @@
 class Expr;
 class Environment;
 
-typedef std::unique_ptr<Expr> ExprPtr;
+using ExprPtr = std::unique_ptr<Expr>;
 
 class CodegenException : public std::runtime_error {
 public:

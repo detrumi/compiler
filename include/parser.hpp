@@ -2,6 +2,8 @@
 #define PARSER_HPP
 
 #include <map>
+#include <stack>
+#include <set>
 #include <stdexcept>
 
 #include "ast.hpp"
@@ -14,8 +16,12 @@ public:
 };
 
 class Parser {
+	const std::map<char, int> opPrecedence_ =
+		{{'+',1},{'-',1},{'*',2},{'/',2}};
+
 	Lexer lexer_;
 	Environment &env_;
+	std::stack<std::set<std::string>> paramStack_;
 public:
 	Parser(Environment &env) : env_(env) {}
 
@@ -26,8 +32,9 @@ public:
 
 	ExprPtr parseNumber();
 	ExprPtr parseParen();
-	ExprPtr parseCall(bool inCall = false);
-	ExprPtr parseExpr(bool inCall = false);
+	ExprPtr parseCall();
+	ExprPtr parseExpr(int prec = 0);
+	ExprPtr parsePrimary();
 	Definition parseDef();
 };
 

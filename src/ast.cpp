@@ -9,25 +9,13 @@ int CallExpr::evaluate(Environment &env) {
 	}
 
 	if (name_ == "+") {
-		return std::accumulate(std::begin(args_), std::end(args_), 0, [&](int res, ExprPtr &e){
-			return res + e->evaluate(env);
-		});
+		return args_[0]->evaluate(env) + args_[1]->evaluate(env);
 	} else if (name_ == "-") {
-		return std::accumulate(std::begin(args_), std::end(args_), 0, [&](int res, ExprPtr &e) {
-			return res - e->evaluate(env);
-		});
+		return args_[0]->evaluate(env) - args_[1]->evaluate(env);
 	} else if (name_ == "*") {
-		return std::accumulate(std::begin(args_), std::end(args_), 1, [&](int res, ExprPtr &e) {
-			return res * e->evaluate(env);
-		});
+		return args_[0]->evaluate(env) * args_[1]->evaluate(env);
 	} else if (name_ == "/") {
-		return std::accumulate(std::begin(args_) + 1, std::end(args_), args_[0]->evaluate(env), [&](int res, ExprPtr &e) {
-			int rhs = e->evaluate(env);
-			if (rhs == 0) {
-				throw CodegenException("Divide by 0 error");
-			}
-			return res / rhs;
-		});
+		return args_[0]->evaluate(env) / args_[1]->evaluate(env);
 	} else {
 		Definition &def = env.getDefinition(name_);
 		return def.evaluateDef(env, args_);
