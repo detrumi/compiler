@@ -8,11 +8,11 @@ A compiler written in C++11 for a functional language
 - Only integer type
 - infix operators, prefix function calls
 - Built-in arithmetic functions (+ - * /)
-- Some syntax error handling (some inputs still crash)
+- Some parser error handling (some inputs still crash)
 
 ## Planned features
-- Better lexing and parsing, infix notation
-- A type system and (hopefully) type inference
+- Better lexing and parsing
+- Type system, type inference
 - Things like (multi-line) code blocks and pattern matching
 - Optimizations
 
