@@ -36,6 +36,7 @@ public:
 	ExprPtr parseExpr(int prec = 0);
 	ExprPtr parsePrimary();
 	Definition parseDef();
+	ExprPtr parseLambda();
 };
 
 #endif

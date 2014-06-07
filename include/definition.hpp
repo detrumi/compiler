@@ -13,9 +13,10 @@ class Definition {
 	std::vector<std::string> params_;
 	ExprPtr body_;
 public:
-	Definition(ExprPtr body) : body_(std::move(body)) {}
-	Definition(std::string name, std::vector<std::string> args, ExprPtr body)
-		: name_(std::move(name)), params_(std::move(args)), body_(std::move(body)) {}
+	Definition(std::vector<std::string> params, ExprPtr body)
+		: params_(std::move(params)), body_(std::move(body)) {}
+	Definition(std::string name, std::vector<std::string> params, ExprPtr body)
+		: name_(std::move(name)), params_(std::move(params)), body_(std::move(body)) {}
 
 	std::string &getName() { return name_; }
 	int paramCount() { return params_.size(); }

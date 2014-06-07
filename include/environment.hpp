@@ -14,7 +14,7 @@ public:
 	void addDefinition(Definition definition);
 	Definition& getDefinition(std::string &name);
 
-	void pushArgs(std::vector<std::string> &argNames, std::vector<ExprPtr> &values);
+	void pushArgs(std::vector<std::string> &params, std::vector<ExprPtr> &values);
 	void popArgs();
 
 	ExprPtr *getArg(std::string name);

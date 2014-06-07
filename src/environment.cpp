@@ -14,10 +14,10 @@ Definition& Environment::getDefinition(std::string &name) {
 	return def->second;
 }
 
-void Environment::pushArgs(std::vector<std::string> &argNames, std::vector<ExprPtr> &values) {
+void Environment::pushArgs(std::vector<std::string> &params, std::vector<ExprPtr> &values) {
 	std::map<std::string, ExprPtr> argMap;
-	for (size_t i = 0; i < argNames.size(); ++i) {
-		argMap[argNames[i]] = std::move(values[i]);
+	for (size_t i = 0; i < params.size(); ++i) {
+		argMap[params[i]] = std::move(values[i]);
 	}
 	arguments_.push(std::move(argMap));
 }

@@ -40,37 +40,30 @@ ExprPtr Parser::parseParen() {
 
 ExprPtr Parser::parseCall() {
 	std::string name = token.str;
-
 	getToken(); // Eat function name
 
-	bool isParam = false;
 	if (paramStack_.size() > 0) {
 		auto params = paramStack_.top();
-		isParam = params.find(name) != params.end();
-	}
-
-	std::vector<ExprPtr> args;
-	if (!isParam) {
-		int paramCount = env_.getDefinition(name).paramCount();
-		// TODO give Definition& to a CallExpr instead of just its name
-
-		while (paramCount-- > 0 && token.type != TokenType::eof && token.type != TokenType::endl
-			&& (token.type != TokenType::symbol || token.str != ")")) {
-			args.push_back(std::move(parsePrimary()));
+		if (params.find(name) != params.end()) { // Call parameter
+			return ExprPtr(new CallExpr(name, 0));
 		}
 	}
-
-	return ExprPtr(new CallExpr(name, std::move(args)));
+	int paramCount = env_.getDefinition(name).paramCount();
+	return ExprPtr(new CallExpr(name, paramCount));
 }
 
 ExprPtr Parser::parseExpr(int prec) {
-	ExprPtr lhs = parsePrimary();
+	ExprPtr lhs = parsePrimary(); // Parse leftmost expression
 
-	decltype(opPrecedence_.begin()) it;
-	while (token.type == TokenType::symbol && 
-		(it = opPrecedence_.find(token.str[0])) != opPrecedence_.end()) {
+	while (token.type == TokenType::symbol) {
+		
+		auto it = opPrecedence_.find(token.str[0]);
+		if (it == opPrecedence_.end()) { // Check operator exists
+			break;
+		}
+		
 		int newPrec = it->second;
-		if (newPrec < prec) {
+		if (newPrec < prec) { // Lower precedence operator; return lhs
 			break;
 		}
 
@@ -80,29 +73,57 @@ ExprPtr Parser::parseExpr(int prec) {
 		std::vector<ExprPtr> args;
 		args.push_back(std::move(lhs));
 		args.push_back(std::move(parseExpr(newPrec + 1)));
-
 		lhs = ExprPtr(new CallExpr(op, std::move(args)));
 	}
 	return std::move(lhs);
 }
 
 ExprPtr Parser::parsePrimary() {
+	ExprPtr expr;
 	switch (token.type) {
 		case TokenType::number:
 			return parseNumber();
 		case TokenType::symbol:
 			if (token.str == "(") {
-				return parseParen();
+				expr = parseParen();
+			} else if (token.str == "\\") {
+				expr = parseLambda();
 			} else {
-				return parseCall();
+				expr = parseCall();
 			}
-		case TokenType::identifier: {
-			return parseCall();
-		}
+			break;
+		case TokenType::identifier:
+			expr = parseCall();
+			break;
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
+	
+	while (!(token.type == TokenType::symbol && token.str == ")") && expr->expectArg()) {
+		expr->addArg(std::move(parseExpr(99))); // Arg binds stronger than next operators
+	}
+	return std::move(expr);
 }
 
+ExprPtr Parser::parseLambda() {
+	getToken(); // Eat '\'
+	std::vector<std::string> params;
+	while (token.type == TokenType::identifier) {
+		params.push_back(token.str);
+		getToken();
+	}
+
+	if (token.type != TokenType::symbol || token.str != ".") {
+		throw ParseException("Expected '.' in lambda");
+	}
+	getToken(); // Eat '.'
+
+	// TODO retain old parameters
+	paramStack_.push(std::set<std::string>(params.begin(), params.end()));
+	ExprPtr body = parseExpr();
+	paramStack_.pop();
+
+	return ExprPtr(new LambdaExpr(std::move(params), std::move(body)));
+}
 
 Definition Parser::parseDef() {
 	getToken(); // Eat 'def'
@@ -122,7 +143,7 @@ Definition Parser::parseDef() {
 	if (token.type != TokenType::symbol || token.str != "=") {
 		throw ParseException("Expected '=' in definition");
 	}
-	getToken(); // Eat =
+	getToken(); // Eat '='
 
 	paramStack_.push(std::set<std::string>(params.begin(), params.end()));;
 	Definition def =  Definition(std::move(name), std::move(params), parseExpr());

@@ -6,15 +6,9 @@ A compiler written in C++11 for a functional language
 ## Current features
 - Runs as interpreter
 - Only integer type
-- infix operators, prefix function calls
+- infix operators, prefix function calls, lambdas
 - Built-in arithmetic functions (+ - * /)
-- Some parser error handling (some inputs still crash)
-
-## Planned features
-- Better lexing and parsing
-- Type system, type inference
-- Things like (multi-line) code blocks and pattern matching
-- Optimizations
+- Parser error handling
 
 ## Examples
     >>> 1 + 2 * 3                   # Built-in operators
@@ -23,4 +17,6 @@ A compiler written in C++11 for a functional language
     >>> def succ x = x + 1    
     >>> succ 2 * succ (7 - 4)       # Function calls
     12
+    >>> (\x y. x / y) 10 3			# Lambda functions
+    3
     
