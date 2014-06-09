@@ -1,6 +1,6 @@
 PACKAGE = compiler
 
-CCFLAGS = -Wall -Wextra -pedantic -std=c++11 -MMD -Iinclude -O0 -g3
+CCFLAGS = -Wall -Wextra -pedantic -std=c++11 -MMD -Iinclude -I/home/wilco/l/boost_1_55_0 -O0 -g3
 
 CPP_FILES = $(wildcard src/*.cpp)
 OBJ_FILES = $(addprefix obj/,$(notdir $(CPP_FILES:.cpp=.o)))

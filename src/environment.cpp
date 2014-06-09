@@ -1,12 +1,10 @@
 #include "environment.hpp"
 
 void Environment::addDefinition(Definition definition) {
-	std::string name = definition.getName();
-	definitions_.erase(name); // TODO replace instead of remove and add
-	definitions_.emplace(std::make_pair(name, std::move(definition)));
+	definitions_[definition.name_] = Expr(std::move(definition));
 }
 
-Definition& Environment::getDefinition(std::string &name) {
+Expr& Environment::getDefinition(std::string &name) {
 	auto def = definitions_.find(name);
 	if (def == definitions_.end()) {
 		throw CodegenException("Undefined variable '" + name + "'");
@@ -14,8 +12,8 @@ Definition& Environment::getDefinition(std::string &name) {
 	return def->second;
 }
 
-void Environment::pushArgs(std::vector<std::string> &params, std::vector<ExprPtr> &values) {
-	std::map<std::string, ExprPtr> argMap;
+void Environment::pushArgs(std::vector<std::string> &params, std::vector<Expr> &values) {
+	std::map<std::string, Expr> argMap;
 	for (size_t i = 0; i < params.size(); ++i) {
 		argMap[params[i]] = std::move(values[i]);
 	}
@@ -26,14 +24,14 @@ void Environment::popArgs() {
 	arguments_.pop();
 }
 
-ExprPtr *Environment::getArg(std::string name) {
+boost::optional<Expr> Environment::getArg(std::string name) {
 	if (arguments_.size() != 0) {
 		auto &args = arguments_.top();
 
 		auto x = args.find(name);
 		if (x != args.end()) {
-			return &x->second;
+			return boost::optional<Expr>(x->second);
 		}
 	}
-	return nullptr;
+	return boost::optional<Expr>();
 }

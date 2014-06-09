@@ -3,21 +3,22 @@
 
 #include <map>
 #include <stack>
+#include <boost/optional.hpp>
 
-#include "definition.hpp"
+#include "ast.hpp"
 
 class Environment
 {
-	std::map<std::string, Definition> definitions_;
-	std::stack<std::map<std::string, ExprPtr>> arguments_;
+	std::map<std::string, Expr> definitions_;
+	std::stack<std::map<std::string, Expr>> arguments_;
 public:
 	void addDefinition(Definition definition);
-	Definition& getDefinition(std::string &name);
+	Expr& getDefinition(std::string &name);
 
-	void pushArgs(std::vector<std::string> &params, std::vector<ExprPtr> &values);
+	void pushArgs(std::vector<std::string> &params, std::vector<Expr> &values);
 	void popArgs();
 
-	ExprPtr *getArg(std::string name);
+	boost::optional<Expr> getArg(std::string name);
 };
 
 #endif

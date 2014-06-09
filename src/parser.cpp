@@ -2,6 +2,7 @@
 
 #include "parser.hpp"
 #include "environment.hpp"
+#include "evaluator.hpp"
 
 // Token buffer
 Token Parser::getToken() {
@@ -10,26 +11,28 @@ Token Parser::getToken() {
 
 void Parser::parseLine(std::string line) {
 	lexer_.setLine(line + "\n");
+	Evaluator evaluator(env_);
 	getToken(); // Get first token
 
 	if (token.type == TokenType::identifier && token.str == "def") {
 		Definition def = parseDef();
 		env_.addDefinition(std::move(def));
 	} else if (token.type != TokenType::endl && token.type != TokenType::eof) { // Top-level expression, return definition without name
-		std::cout << parseExpr()->evaluate(env_) << std::endl;
+		Expr expr = parseExpr();
+		std::cout << evaluator.eval(expr) << std::endl;
 	}
 }
 
-ExprPtr Parser::parseNumber() {
-	ExprPtr result = ExprPtr(new NumberExpr(token.num));
+Expr Parser::parseNumber() {
+	Expr result = Expr(token.num);
 	getToken(); // Eat number
 	return result;
 }
 
-ExprPtr Parser::parseParen() {
+Expr Parser::parseParen() {
 	getToken(); // Eat (
 
-	ExprPtr expr = parseExpr();
+	Expr expr = parseExpr();
 
 	if (token.type != TokenType::symbol || token.str != ")")
 		throw ParseException("Expected ')'");
@@ -38,22 +41,21 @@ ExprPtr Parser::parseParen() {
 	return expr;
 }
 
-ExprPtr Parser::parseCall() {
+Expr Parser::parseCall() {
 	std::string name = token.str;
 	getToken(); // Eat function name
 
 	if (paramStack_.size() > 0) {
 		auto params = paramStack_.top();
 		if (params.find(name) != params.end()) { // Call parameter
-			return ExprPtr(new CallExpr(name, 0));
+			return Call(std::move(name));
 		}
 	}
-	int paramCount = env_.getDefinition(name).paramCount();
-	return ExprPtr(new CallExpr(name, paramCount));
+	return Call(std::move(name));
 }
 
-ExprPtr Parser::parseExpr(int prec) {
-	ExprPtr lhs = parsePrimary(); // Parse leftmost expression
+Expr Parser::parseExpr(int prec) {
+	Expr lhs = parsePrimary(); // Parse leftmost expression
 
 	while (token.type == TokenType::symbol) {
 		
@@ -70,16 +72,16 @@ ExprPtr Parser::parseExpr(int prec) {
 		std::string op = token.str;
 		getToken(); // Eat operator
 
-		std::vector<ExprPtr> args;
+		std::vector<Expr> args;
 		args.push_back(std::move(lhs));
 		args.push_back(std::move(parseExpr(newPrec + 1)));
-		lhs = ExprPtr(new CallExpr(op, std::move(args)));
+		lhs = Call(op, std::move(args));
 	}
 	return std::move(lhs);
 }
 
-ExprPtr Parser::parsePrimary() {
-	ExprPtr expr;
+Expr Parser::parsePrimary() {
+	Expr expr;
 	switch (token.type) {
 		case TokenType::number:
 			return parseNumber();
@@ -98,13 +100,33 @@ ExprPtr Parser::parsePrimary() {
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}
 	
-	while (!(token.type == TokenType::symbol && token.str == ")") && expr->expectArg()) {
-		expr->addArg(std::move(parseExpr(99))); // Arg binds stronger than next operators
+	if (expr.type() == typeid(Call)) {
+		Call &call = boost::get<Call>(expr);
+		if (paramStack_.empty() || paramStack_.top().find(call.name_) == paramStack_.top().end()) { // Don't expect args on parameter call
+			if (opPrecedence_.find(call.name_[0]) != opPrecedence_.end()) { // Builtin operator
+				parseArgs(2, call.args_);
+			} else { // User-defined function call
+				Definition &def = boost::get<Definition>(env_.getDefinition(call.name_));
+				parseArgs(def.params_.size(), call.args_);
+			}
+		}
+	} else if (expr.type() == typeid(Lambda)) {
+		Lambda &lambda = boost::get<Lambda>(expr);
+		parseArgs(lambda.params_.size(), lambda.args_);
 	}
+
 	return std::move(expr);
 }
 
-ExprPtr Parser::parseLambda() {
+void Parser::parseArgs(int argCount, std::vector<Expr> &target) {
+	argCount -= target.size();
+	while (argCount-- > 0 && !(token.type == TokenType::symbol && token.str == ")")) {
+		target.push_back(std::move(parseExpr(99))); // Arg binds stronger than next operators
+	}
+}
+
+
+Expr Parser::parseLambda() {
 	getToken(); // Eat '\'
 	std::vector<std::string> params;
 	while (token.type == TokenType::identifier) {
@@ -119,10 +141,10 @@ ExprPtr Parser::parseLambda() {
 
 	// TODO retain old parameters
 	paramStack_.push(std::set<std::string>(params.begin(), params.end()));
-	ExprPtr body = parseExpr();
+	Expr body = parseExpr();
 	paramStack_.pop();
 
-	return ExprPtr(new LambdaExpr(std::move(params), std::move(body)));
+	return Lambda(std::move(params), std::move(body));
 }
 
 Definition Parser::parseDef() {
@@ -146,7 +168,8 @@ Definition Parser::parseDef() {
 	getToken(); // Eat '='
 
 	paramStack_.push(std::set<std::string>(params.begin(), params.end()));;
-	Definition def =  Definition(std::move(name), std::move(params), parseExpr());
+	Definition def(std::move(name), std::move(params), std::move(parseExpr()));
 	paramStack_.pop();
+
 	return def;
 }

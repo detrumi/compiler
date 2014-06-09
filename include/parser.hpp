@@ -8,7 +8,6 @@
 
 #include "ast.hpp"
 #include "lexer.hpp"
-#include "definition.hpp"
 
 class ParseException : public std::runtime_error {
 public:
@@ -22,6 +21,8 @@ class Parser {
 	Lexer lexer_;
 	Environment &env_;
 	std::stack<std::set<std::string>> paramStack_;
+
+	void parseArgs(int argCount, std::vector<Expr> &target);
 public:
 	Parser(Environment &env) : env_(env) {}
 
@@ -30,13 +31,13 @@ public:
 
 	void parseLine(std::string line);
 
-	ExprPtr parseNumber();
-	ExprPtr parseParen();
-	ExprPtr parseCall();
-	ExprPtr parseExpr(int prec = 0);
-	ExprPtr parsePrimary();
+	Expr parseNumber();
+	Expr parseParen();
+	Expr parseCall();
+	Expr parseExpr(int prec = 0);
+	Expr parsePrimary();
 	Definition parseDef();
-	ExprPtr parseLambda();
+	Expr parseLambda();
 };
 
 #endif
