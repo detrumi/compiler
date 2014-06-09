@@ -44,13 +44,6 @@ Expr Parser::parseParen() {
 Expr Parser::parseCall() {
 	std::string name = token.str;
 	getToken(); // Eat function name
-
-	if (paramStack_.size() > 0) {
-		auto params = paramStack_.top();
-		if (params.find(name) != params.end()) { // Call parameter
-			return Call(std::move(name));
-		}
-	}
 	return Call(std::move(name));
 }
 
@@ -72,9 +65,7 @@ Expr Parser::parseExpr(int prec) {
 		std::string op = token.str;
 		getToken(); // Eat operator
 
-		std::vector<Expr> args;
-		args.push_back(std::move(lhs));
-		args.push_back(std::move(parseExpr(newPrec + 1)));
+		auto args = std::vector<Expr> { std::move(lhs), std::move(parseExpr(newPrec + 1)) };
 		lhs = Call(op, std::move(args));
 	}
 	return std::move(lhs);

@@ -7,17 +7,19 @@
 #include <boost/variant.hpp>
 
 class Environment;
+struct Call;
+struct Lambda;
+struct Definition;
+
+using Expr = boost::variant< int
+							, Call
+						    , boost::recursive_wrapper<Lambda>
+						    , boost::recursive_wrapper<Definition> >;
 
 class CodegenException : public std::runtime_error {
 public:
 	CodegenException(std::string msg) : std::runtime_error(msg) {}
 };
-
-struct Call; struct Lambda; struct Definition;
-using Expr = boost::variant< int
-							, Call
-						    , boost::recursive_wrapper<Lambda>
-						    , boost::recursive_wrapper<Definition> >;
 
 struct Call {
 	Call(std::string name)
