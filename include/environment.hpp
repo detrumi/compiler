@@ -9,10 +9,13 @@
 
 class Environment
 {
+	int lambdaCounter_ = 0;
+
 	std::map<std::string, Expr> definitions_;
 	std::stack<std::map<std::string, Expr>> arguments_;
 public:
 	void addDefinition(Definition definition);
+	std::string addLambda(std::vector<std::string> params, Expr body);
 	Expr& getDefinition(std::string &name);
 
 	void pushArgs(std::vector<std::string> &params, std::vector<Expr> &values);

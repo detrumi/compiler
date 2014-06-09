@@ -101,9 +101,6 @@ Expr Parser::parsePrimary() {
 				parseArgs(def.params_.size(), call.args_);
 			}
 		}
-	} else if (expr.type() == typeid(Lambda)) {
-		Lambda &lambda = boost::get<Lambda>(expr);
-		parseArgs(lambda.params_.size(), lambda.args_);
 	}
 
 	return std::move(expr);
@@ -115,7 +112,6 @@ void Parser::parseArgs(int argCount, std::vector<Expr> &target) {
 		target.push_back(std::move(parseExpr(99))); // Arg binds stronger than next operators
 	}
 }
-
 
 Expr Parser::parseLambda() {
 	getToken(); // Eat '\'
@@ -135,7 +131,8 @@ Expr Parser::parseLambda() {
 	Expr body = parseExpr();
 	paramStack_.pop();
 
-	return Lambda(std::move(params), std::move(body));
+	auto lambdaName = env_.addLambda(std::move(params), std::move(body));
+	return Call(std::move(lambdaName));
 }
 
 Definition Parser::parseDef() {
@@ -158,9 +155,9 @@ Definition Parser::parseDef() {
 	}
 	getToken(); // Eat '='
 
-	paramStack_.push(std::set<std::string>(params.begin(), params.end()));;
-	Definition def(std::move(name), std::move(params), std::move(parseExpr()));
+	paramStack_.push(std::set<std::string>(params.begin(), params.end()));
+	Expr body = parseExpr();
 	paramStack_.pop();
 
-	return def;
+	return Definition(std::move(name), std::move(params), std::move(body));;
 }

@@ -34,19 +34,10 @@ public:
 		} else if (call.name_ == "/") {
 			return eval(call.args_[0]) / eval(call.args_[1]);
 		} else {
-			passedArgs_.clear();
-			passedArgs_.insert(passedArgs_.begin(), call.args_.begin(), call.args_.end());
-
+			passedArgs_ = std::vector<Expr>(call.args_);
 			auto &def = env_.getDefinition(call.name_);
 			return eval(def);
 		}
-	}
-
-	int operator()(Lambda &lambda) {
-		env_.pushArgs(lambda.params_, lambda.args_);
-		int result = eval(lambda.body_);
-		env_.popArgs();
-		return result;
 	}
 
 	int operator()(Definition &def) {

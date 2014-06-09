@@ -4,6 +4,12 @@ void Environment::addDefinition(Definition definition) {
 	definitions_[definition.name_] = Expr(std::move(definition));
 }
 
+std::string Environment::addLambda(std::vector<std::string> params, Expr body) {
+	std::string name = "#" + std::to_string(lambdaCounter_++);
+	addDefinition(Definition(name, std::move(params), std::move(body)));
+	return std::move(name);
+}
+
 Expr& Environment::getDefinition(std::string &name) {
 	auto def = definitions_.find(name);
 	if (def == definitions_.end()) {
