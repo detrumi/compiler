@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <boost/variant.hpp>
 
-class Environment;
 struct Call;
 struct Definition;
 
@@ -40,7 +39,7 @@ struct Call {
 
 	boost::variant<DefPtr, std::string> target_; // Def or argument/builtin
 	std::vector<Expr> args_;
-	int expectedArgs_; // TODO maybe this should be in the environment?
+	int expectedArgs_;
 };
 
 #endif
