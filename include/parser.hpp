@@ -20,9 +20,7 @@ class Parser {
 
 	Lexer lexer_;
 	Environment &env_;
-	std::stack<std::set<std::string>> paramStack_;
-
-	void parseArgs(int argCount, std::vector<Expr> &target);
+	std::stack<std::set<std::string>> paramStack_; // TODO move to environment?
 public:
 	Parser(Environment &env) : env_(env) {}
 

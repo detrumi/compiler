@@ -15,8 +15,7 @@ void Parser::parseLine(std::string line) {
 	getToken(); // Get first token
 
 	if (token.type == TokenType::identifier && token.str == "def") {
-		Definition def = parseDef();
-		env_.addDefinition(std::move(def));
+		env_.addDefinition(std::move(parseDef()));
 	} else if (token.type != TokenType::endl && token.type != TokenType::eof) { // Top-level expression, return definition without name
 		Expr expr = parseExpr();
 		std::cout << evaluator.eval(expr) << std::endl;
@@ -44,7 +43,11 @@ Expr Parser::parseParen() {
 Expr Parser::parseCall() {
 	std::string name = token.str;
 	getToken(); // Eat function name
-	return Call(std::move(name));
+	if (!paramStack_.empty() && paramStack_.top().find(name) != paramStack_.top().end()) { // Argument
+		return Call(std::move(name), 0);
+	} else { // Definition
+		return Call(env_.getDefinition(std::move(name)));
+	}
 }
 
 Expr Parser::parseExpr(int prec) {
@@ -66,7 +69,7 @@ Expr Parser::parseExpr(int prec) {
 		getToken(); // Eat operator
 
 		auto args = std::vector<Expr> { std::move(lhs), std::move(parseExpr(newPrec + 1)) };
-		lhs = Call(op, std::move(args));
+		lhs = Call(std::move(op), std::move(args));
 	}
 	return std::move(lhs);
 }
@@ -82,7 +85,7 @@ Expr Parser::parsePrimary() {
 			} else if (token.str == "\\") {
 				expr = parseLambda();
 			} else {
-				expr = parseCall();
+				throw ParseException("Unexpected symbol when parsing an expression");
 			}
 			break;
 		case TokenType::identifier:
@@ -93,24 +96,13 @@ Expr Parser::parsePrimary() {
 	
 	if (expr.type() == typeid(Call)) {
 		Call &call = boost::get<Call>(expr);
-		if (paramStack_.empty() || paramStack_.top().find(call.name_) == paramStack_.top().end()) { // Don't expect args on parameter call
-			if (opPrecedence_.find(call.name_[0]) != opPrecedence_.end()) { // Builtin operator
-				parseArgs(2, call.args_);
-			} else { // User-defined function call
-				Definition &def = boost::get<Definition>(env_.getDefinition(call.name_));
-				parseArgs(def.params_.size(), call.args_);
-			}
+		int argCount = call.expectedArgs_ - call.args_.size();
+		while (argCount-- > 0 && !(token.type == TokenType::symbol && token.str == ")")) {
+			call.args_.push_back(std::move(parseExpr(99))); // Arg binds stronger than next operators
 		}
 	}
 
 	return std::move(expr);
-}
-
-void Parser::parseArgs(int argCount, std::vector<Expr> &target) {
-	argCount -= target.size();
-	while (argCount-- > 0 && !(token.type == TokenType::symbol && token.str == ")")) {
-		target.push_back(std::move(parseExpr(99))); // Arg binds stronger than next operators
-	}
 }
 
 Expr Parser::parseLambda() {
@@ -131,8 +123,7 @@ Expr Parser::parseLambda() {
 	Expr body = parseExpr();
 	paramStack_.pop();
 
-	auto lambdaName = env_.addLambda(std::move(params), std::move(body));
-	return Call(std::move(lambdaName));
+	return Call(env_.addLambda(std::move(params), std::move(body)));
 }
 
 Definition Parser::parseDef() {

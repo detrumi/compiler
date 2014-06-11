@@ -12,7 +12,7 @@ class Evaluator : public boost::static_visitor<int> {
 public:
 	Evaluator(Environment &env) : env_(env) {}
 
-	int eval(Expr &expr) {
+	int eval(const Expr &expr) {
 		return boost::apply_visitor(*this, expr);
 	}
 
@@ -20,29 +20,31 @@ public:
 		return i;
 	}
 
-	int operator()(Call &call) {
-		if (auto arg = env_.getArg(call.name_)) { // Evaluate argument
-			return eval(*arg);
-		}
+	int operator()(const Call &call) {
+		if (call.target_.type() == typeid(std::string)) {
+			auto name = boost::get<std::string>(call.target_);
 
-		if (call.name_ == "+") {
-			return eval(call.args_[0]) + eval(call.args_[1]);
-		} else if (call.name_ == "-") {
-			return eval(call.args_[0]) - eval(call.args_[1]);
-		} else if (call.name_ == "*") {
-			return eval(call.args_[0]) * eval(call.args_[1]);
-		} else if (call.name_ == "/") {
-			return eval(call.args_[0]) / eval(call.args_[1]);
-		} else {
+			// TODO handle builtins nicer
+			if (name == "+") { // Builtins
+				return eval(call.args_[0]) + eval(call.args_[1]);
+			} else if (name == "-") {
+				return eval(call.args_[0]) - eval(call.args_[1]);
+			} else if (name == "*") {
+				return eval(call.args_[0]) * eval(call.args_[1]);
+			} else if (name == "/") {
+				return eval(call.args_[0]) / eval(call.args_[1]);
+			} else { // Argument
+				return eval(env_.getArg(std::move(name)));
+			}
+		} else { // Definition
 			passedArgs_ = std::vector<Expr>(call.args_);
-			auto &def = env_.getDefinition(call.name_);
-			return eval(def);
+			return eval(boost::get<DefPtr>(call.target_));
 		}
 	}
 
-	int operator()(Definition &def) {
-		env_.pushArgs(def.params_, passedArgs_);
-		int result = eval(def.body_);
+	int operator()(const DefPtr &def) {
+		env_.pushArgs(def->params_, passedArgs_);
+		int result = eval(def->body_);
 		env_.popArgs();
 		return result;
 	}
