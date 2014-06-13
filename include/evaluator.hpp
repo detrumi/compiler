@@ -6,7 +6,9 @@
 #include "ast.hpp"
 
 class Evaluator : public boost::static_visitor<int> {
-	std::stack<std::map<std::string, Expr>> arguments_;
+	std::vector<std::map<std::string, Expr>> arguments_;
+	int argumentDepth_ = 0;
+
 	std::vector<Expr> passedArgs_;
 public:
 	int eval(const Expr &expr) {
@@ -31,12 +33,14 @@ public:
 			} else if (name == "/") {
 				return eval(call.args_[0]) / eval(call.args_[1]);
 			} else { // Argument
-				if (arguments_.size() != 0) {
-					auto &args = arguments_.top();
+				if (!arguments_.empty()) {
+					for (int i = 0; i <= argumentDepth_; i++) {
+						auto &args = arguments_[arguments_.size() - i - 1];
 
-					auto x = args.find(name);
-					if (x != args.end()) {
-						return eval(x->second);
+						auto x = args.find(name);
+						if (x != args.end()) {
+							return eval(x->second);
+						}
 					}
 				}
 				throw CodegenException("Unknown argument '" + name + "'");
@@ -53,9 +57,13 @@ public:
 			argMap[def->params_[i]] = std::move(passedArgs_[i]);
 		}
 
-		arguments_.push(std::move(argMap));
+		int oldArgumentDepth = 0;
+
+		if (def->name_ == "") argumentDepth_++; else std::swap(argumentDepth_, oldArgumentDepth);
+		arguments_.push_back(std::move(argMap));
 		int result = eval(def->body_);
-		arguments_.pop();
+		arguments_.pop_back();
+		if (def->name_ == "") argumentDepth_--; else argumentDepth_ = oldArgumentDepth;
 
 		return result;
 	}

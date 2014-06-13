@@ -37,15 +37,20 @@ Expr Parser::parseParen() {
 Expr Parser::parseCall() {
 	std::string name = token_.str;
 	getToken(); // Eat function name
-	if (!env_.paramStack_.empty() && env_.paramStack_.top().find(name) != env_.paramStack_.top().end()) { // Argument
-		return Call(std::move(name), 0);
-	} else { // Definition
-		auto def = env_.definitions_.find(name);
-		if (def == env_.definitions_.end()) {
-			throw CodegenException("Undefined variable '" + name + "'");
+	if (!env_.paramStack_.empty()) {
+		for (int i = 0; i <= env_.lambdaDepth_; i++) {
+			auto params = env_.paramStack_[env_.paramStack_.size() - i - 1];
+			if (params.find(name) != params.end()) { // Argument
+				return Call(std::move(name), 0);
+			}
 		}
-		return Call(def->second);
 	}
+	// Definition
+	auto def = env_.definitions_.find(name);
+	if (def == env_.definitions_.end()) {
+		throw CodegenException("Undefined variable '" + name + "'");
+	}
+	return Call(def->second);
 }
 
 Expr Parser::parseExpr(int prec) {
@@ -116,10 +121,11 @@ Expr Parser::parseLambda() {
 	}
 	getToken(); // Eat '.'
 
-	// TODO retain old parameters
-	env_.paramStack_.push(std::set<std::string>(params.begin(), params.end()));
+	env_.paramStack_.push_back(std::set<std::string>(params.begin(), params.end()));
+	env_.lambdaDepth_++;
 	Expr body = parseExpr();
-	env_.paramStack_.pop();
+	env_.lambdaDepth_--;
+	env_.paramStack_.pop_back();
 
 	return Call(std::make_shared<Definition>("", std::move(params), std::move(body)));
 }
@@ -144,9 +150,12 @@ Definition Parser::parseDef() {
 	}
 	getToken(); // Eat '='
 
-	env_.paramStack_.push(std::set<std::string>(params.begin(), params.end()));
+	env_.paramStack_.push_back(std::set<std::string>(params.begin(), params.end()));
+	int lambdaDepth = env_.lambdaDepth_;
+	env_.lambdaDepth_ = 0;
 	Expr body = parseExpr();
-	env_.paramStack_.pop();
+	env_.lambdaDepth_ = lambdaDepth;
+	env_.paramStack_.pop_back();
 
 	return Definition(std::move(name), std::move(params), std::move(body));;
 }

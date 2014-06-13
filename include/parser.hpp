@@ -2,7 +2,6 @@
 #define PARSER_HPP
 
 #include <map>
-#include <stack>
 #include <set>
 #include <stdexcept>
 
@@ -12,7 +11,9 @@
 struct Environment
 {
 	std::map<std::string, DefPtr> definitions_;
-	std::stack<std::set<std::string>> paramStack_;
+
+	std::vector<std::set<std::string>> paramStack_;
+	int lambdaDepth_ = 0;
 };
 
 class ParseException : public std::runtime_error {
