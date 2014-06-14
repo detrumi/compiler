@@ -11,9 +11,7 @@
 struct Environment
 {
 	std::map<std::string, DefPtr> definitions_;
-
-	std::vector<std::set<std::string>> paramStack_;
-	int lambdaDepth_ = 0;
+	std::vector<std::string> params_;
 };
 
 class ParseException : public std::runtime_error {

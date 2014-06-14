@@ -1,3 +1,4 @@
+#include <algorithm>
 #include "parser.hpp"
 
 // Token buffer
@@ -37,14 +38,12 @@ Expr Parser::parseParen() {
 Expr Parser::parseCall() {
 	std::string name = token_.str;
 	getToken(); // Eat function name
-	if (!env_.paramStack_.empty()) {
-		for (int i = 0; i <= env_.lambdaDepth_; i++) {
-			auto params = env_.paramStack_[env_.paramStack_.size() - i - 1];
-			if (params.find(name) != params.end()) { // Argument
-				return Call(std::move(name), 0);
-			}
-		}
+
+	auto param = std::find(env_.params_.rbegin(), env_.params_.rend(), name);
+	if (param != env_.params_.rend()) {
+		return Call(std::move(name), 0);
 	}
+
 	// Definition
 	auto def = env_.definitions_.find(name);
 	if (def == env_.definitions_.end()) {
@@ -121,11 +120,9 @@ Expr Parser::parseLambda() {
 	}
 	getToken(); // Eat '.'
 
-	env_.paramStack_.push_back(std::set<std::string>(params.begin(), params.end()));
-	env_.lambdaDepth_++;
+	env_.params_.insert(env_.params_.end(), params.begin(), params.end());
 	Expr body = parseExpr();
-	env_.lambdaDepth_--;
-	env_.paramStack_.pop_back();
+	env_.params_.resize(env_.params_.size() - params.size());
 
 	return Call(std::make_shared<Definition>("", std::move(params), std::move(body)));
 }
@@ -150,12 +147,10 @@ Definition Parser::parseDef() {
 	}
 	getToken(); // Eat '='
 
-	env_.paramStack_.push_back(std::set<std::string>(params.begin(), params.end()));
-	int lambdaDepth = env_.lambdaDepth_;
-	env_.lambdaDepth_ = 0;
+	std::vector<std::string> oldParams(params.begin(), params.end());
+	std::swap(oldParams, env_.params_);
 	Expr body = parseExpr();
-	env_.lambdaDepth_ = lambdaDepth;
-	env_.paramStack_.pop_back();
+	std::swap(oldParams, env_.params_);
 
 	return Definition(std::move(name), std::move(params), std::move(body));;
 }
