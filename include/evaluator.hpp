@@ -59,11 +59,11 @@ public:
 
 		int oldArgumentDepth = 0;
 
-		if (def->name_ == "") argumentDepth_++; else std::swap(argumentDepth_, oldArgumentDepth);
+		if (def->isLambda()) argumentDepth_++; else std::swap(argumentDepth_, oldArgumentDepth);
 		arguments_.push_back(std::move(argMap));
 		int result = eval(def->body_);
 		arguments_.pop_back();
-		if (def->name_ == "") argumentDepth_--; else argumentDepth_ = oldArgumentDepth;
+		if (def->isLambda()) argumentDepth_--; else argumentDepth_ = oldArgumentDepth;
 
 		return result;
 	}

@@ -1,10 +1,12 @@
 #include <iostream>
 #include "parser.hpp"
 #include "evaluator.hpp"
+#include "prettyPrint.hpp"
 
 int main() {
 	Environment env;
 	Parser parser(env);
+	PrettyPrint printer;
 	Evaluator evaluator;
 	while (std::cin) {
 		try {
@@ -14,6 +16,7 @@ int main() {
 			std::getline(std::cin, line);
 			if (line.length() > 0) {
 				Expr expr = parser.parseLine(line);
+				std::cout << printer.print(expr) << std::endl;
 				if (expr.type() == typeid(DefPtr)) { // Definition
 					auto def = boost::get<DefPtr>(std::move(expr));
 					env.definitions_[def->name_] = def;

@@ -24,6 +24,10 @@ struct Definition { // User-defined definition or lambda
 	Definition(std::string name, std::vector<std::string> params, Expr body)
 		: name_(std::move(name)), params_(std::move(params)), body_(std::move(body)) {}
 
+	bool isLambda() {
+		return name_ == "";
+	}
+
 	std::string name_;
 	std::vector<std::string> params_;
 	Expr body_;
