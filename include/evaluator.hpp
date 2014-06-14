@@ -6,10 +6,8 @@
 #include "ast.hpp"
 
 class Evaluator : public boost::static_visitor<int> {
-	std::vector<std::map<std::string, Expr>> arguments_;
-	int argumentDepth_ = 0;
-
-	std::vector<Expr> passedArgs_;
+	std::vector<std::string> parameters_;
+	std::vector<Expr> arguments_;
 public:
 	int eval(const Expr &expr) {
 		return boost::apply_visitor(*this, expr);
@@ -17,6 +15,20 @@ public:
 
 	int operator()(int i) {
 		return i;
+	}
+
+	int operator()(const DefPtr &def) {
+		int result;
+		if (def->isLambda()) {
+			parameters_.insert(parameters_.end(), def->params_.begin(), def->params_.end());
+			result = eval(def->body_);
+			parameters_.resize(parameters_.size() - def->params_.size());
+		} else {
+			std::swap(def->params_, parameters_);
+			result = eval(def->body_);
+			std::swap(def->params_, parameters_);
+		}
+		return result;
 	}
 
 	int operator()(const Call &call) {
@@ -33,39 +45,20 @@ public:
 			} else if (name == "/") {
 				return eval(call.args_[0]) / eval(call.args_[1]);
 			} else { // Argument
-				if (!arguments_.empty()) {
-					for (int i = 0; i <= argumentDepth_; i++) {
-						auto &args = arguments_[arguments_.size() - i - 1];
-
-						auto x = args.find(name);
-						if (x != args.end()) {
-							return eval(x->second);
-						}
+				for (int i = parameters_.size() - 1; i >= 0; --i) {
+					if (parameters_[i] == name) {
+						return eval(arguments_[i]);
 					}
 				}
 				throw CodegenException("Unknown argument '" + name + "'");
 			}
 		} else { // Definition
-			passedArgs_ = std::vector<Expr>(call.args_);
-			return eval(boost::get<DefPtr>(call.target_));
+			std::vector<Expr> args = std::vector<Expr>(call.args_);
+			std::swap(args, arguments_);
+			int result = eval(boost::get<DefPtr>(call.target_));
+			std::swap(arguments_, args);
+			return result;
 		}
-	}
-
-	int operator()(const DefPtr &def) {
-		std::map<std::string, Expr> argMap;
-		for (size_t i = 0; i < def->params_.size(); ++i) {
-			argMap[def->params_[i]] = std::move(passedArgs_[i]);
-		}
-
-		int oldArgumentDepth = 0;
-
-		if (def->isLambda()) argumentDepth_++; else std::swap(argumentDepth_, oldArgumentDepth);
-		arguments_.push_back(std::move(argMap));
-		int result = eval(def->body_);
-		arguments_.pop_back();
-		if (def->isLambda()) argumentDepth_--; else argumentDepth_ = oldArgumentDepth;
-
-		return result;
 	}
 };
 

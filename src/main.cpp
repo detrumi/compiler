@@ -6,8 +6,6 @@
 int main() {
 	Environment env;
 	Parser parser(env);
-	PrettyPrint printer;
-	Evaluator evaluator;
 	while (std::cin) {
 		try {
 			std::cout << ">>> ";
@@ -16,11 +14,15 @@ int main() {
 			std::getline(std::cin, line);
 			if (line.length() > 0) {
 				Expr expr = parser.parseLine(line);
+
+				PrettyPrint printer;
 				std::cout << printer.print(expr) << std::endl;
+
 				if (expr.type() == typeid(DefPtr)) { // Definition
 					auto def = boost::get<DefPtr>(std::move(expr));
 					env.definitions_[def->name_] = def;
 				} else { // Top-level expression
+					Evaluator evaluator;
 					std::cout << evaluator.eval(expr) << std::endl;
 				}
 				parser.parseLine(line);
