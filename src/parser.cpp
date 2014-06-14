@@ -7,7 +7,7 @@ Token Parser::getToken() {
 }
 
 Expr Parser::parseLine(std::string line) {
-	lexer_.setLine(line + "\n");
+	lexer_ = Lexer(line + "\n");
 	getToken(); // Get first token
 
 	if (token_.type == TokenType::identifier && token_.str == "let") {

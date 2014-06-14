@@ -3,11 +3,6 @@
 
 #include "lexer.hpp"
 
-void Lexer::setLine(std::string line) {
-	line_ = line;
-	index_ = 0;
-}
-
 // Return next token from standard input
 Token Lexer::getToken() {
 	Token token;

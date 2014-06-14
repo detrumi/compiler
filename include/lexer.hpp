@@ -17,7 +17,10 @@ class Lexer {
 	std::string line_;
 	int index_;
 public:
-	void setLine(std::string line);
+	Lexer() : index_(0) {}
+	Lexer(std::string line)
+		: line_(line), index_(0) {}
+
 	Token getToken();
 };
 

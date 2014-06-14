@@ -16,6 +16,9 @@ obj/%.o: src/%.cpp
 run: $(PACKAGE)
 	valgrind ./$(PACKAGE)
 
+check:
+	cppcheck --enable=style -q -Iinclude .
+
 clean:
 	rm -f obj/* $(PACKAGE)
 

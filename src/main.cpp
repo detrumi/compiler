@@ -27,9 +27,9 @@ int main() {
 				}
 				parser.parseLine(line);
 			}
-		} catch (ParseException ex) {
+		} catch (ParseException &ex) {
 			std::cout << ex.what() << std::endl;
-		} catch (CodegenException ex) {
+		} catch (CodegenException &ex) {
 			std::cout << ex.what() << std::endl;
 		}
 	}

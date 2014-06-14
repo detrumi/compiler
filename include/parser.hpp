@@ -23,11 +23,12 @@ class Parser {
 	const std::map<char, int> opPrecedence_ =
 		{{'+',1},{'-',1},{'*',2},{'/',2}};
 
+	Environment &env_;
 	Token token_;
 	Lexer lexer_;
-	Environment &env_;
 public:
-	Parser(Environment &env) : env_(env) {}
+	Parser(Environment &env)
+		: env_(env), token_() {}
 
 	Token getToken();
 
