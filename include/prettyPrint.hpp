@@ -13,6 +13,10 @@ public:
 		return std::to_string(i);
 	}
 
+	std::string operator()(const Parameter &param) {
+		return param.name_;
+	}
+
 	std::string operator()(const DefPtr &def) {
 		return print(def->body_);
 	}
@@ -38,9 +42,7 @@ public:
 			result += "(";
 		}
 
-		if (call.target_.type() == typeid(std::string)) {
-			result += boost::get<std::string>(call.target_);
-		} else if (call.target_.type() == typeid(Lambda)) {
+		if (call.target_.type() == typeid(Lambda)) {
 			result += print(boost::get<Lambda>(call.target_));
 		} else {
 			result += print(boost::get<DefPtr>(call.target_));

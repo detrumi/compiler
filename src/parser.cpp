@@ -35,13 +35,13 @@ Expr Parser::parseParen() {
 	return expr;
 }
 
-Expr Parser::parseCall() {
+Expr Parser::parseIdentifier() {
 	std::string name = token_.str;
 	getToken(); // Eat function name
 
 	auto param = std::find(env_.params_.rbegin(), env_.params_.rend(), name);
 	if (param != env_.params_.rend()) { // Argument call
-		return Call(std::move(name), 0);
+		return Parameter(std::move(name));
 	}
 
 	// Definition
@@ -91,7 +91,7 @@ Expr Parser::parsePrimary() {
 			}
 			break;
 		case TokenType::identifier:
-			expr = parseCall();
+			expr = parseIdentifier();
 			break;
 		default: throw ParseException("Unexpected token when expecting an expression");
 	}

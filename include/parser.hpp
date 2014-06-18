@@ -36,7 +36,7 @@ public:
 
 	Expr parseNumber();
 	Expr parseParen();
-	Expr parseCall();
+	Expr parseIdentifier();
 	Expr parseExpr(int prec = 0);
 	Expr parsePrimary();
 	Definition parseDef();

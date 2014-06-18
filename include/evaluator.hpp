@@ -17,6 +17,15 @@ public:
 		return i;
 	}
 
+	int operator()(const Parameter &param) {
+		for (int i = parameters_.size() - 1; i >= 0; --i) {
+			if (parameters_[i] == param.name_) {
+				return eval(arguments_[i]);
+			}
+		}
+		throw CodegenException("Unknown argument '" + param.name_ + "'");
+	}
+
 	int operator()(const DefPtr &def) {
 		std::vector<std::string> params;
 
@@ -47,14 +56,8 @@ public:
 				return eval(call.args_[0]) * eval(call.args_[1]);
 			} else if (name == "/") {
 				return eval(call.args_[0]) / eval(call.args_[1]);
-			} else { // Argument
-				for (int i = parameters_.size() - 1; i >= 0; --i) {
-					if (parameters_[i] == name) {
-						return eval(arguments_[i]);
-					}
-				}
-				throw CodegenException("Unknown argument '" + name + "'");
 			}
+			throw CodegenException("Couldn't find builtin '" + name + "'");
 		} else { // Definition or lambda
 			int result;
 			std::vector<Expr> args = std::vector<Expr>(call.args_);

@@ -6,13 +6,15 @@
 #include <stdexcept>
 #include <boost/variant.hpp>
 
-struct Definition;
-struct Lambda;
+struct Parameter;
 struct Call;
+struct Lambda;
+struct Definition;
 
 using DefPtr = std::shared_ptr<Definition>;
 
 using Expr = boost::variant< int
+							, Parameter
 							, boost::recursive_wrapper<Call>
 							, boost::recursive_wrapper<Lambda>
 						    , boost::recursive_wrapper<DefPtr> >;
@@ -20,6 +22,13 @@ using Expr = boost::variant< int
 class CodegenException : public std::runtime_error {
 public:
 	CodegenException(std::string msg) : std::runtime_error(msg) {}
+};
+
+struct Parameter { // Parameter call
+	Parameter(std::string name)
+		: name_(std::move(name)) {}
+
+	std::string name_;
 };
 
 struct Lambda {
@@ -46,11 +55,11 @@ struct Call {
 	{
 		args_.reserve(expectedArgs);
 	}
-	
+
 	Call(std::string op, std::vector<Expr> args) // Builtin operators
 		: target_(std::move(op)), args_(std::move(args)) {}
 
-	TargetType target_; // def, lambda or argument/builtin
+	TargetType target_; // def, lambda or builtin
 	std::vector<Expr> args_;
 };
 

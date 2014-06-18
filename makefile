@@ -17,7 +17,7 @@ run: $(PACKAGE)
 	valgrind ./$(PACKAGE)
 
 check:
-	cppcheck --enable=style -q -Iinclude .
+	@cppcheck --enable=style -q -Iinclude .
 
 clean:
 	rm -f obj/* $(PACKAGE)
