@@ -40,7 +40,7 @@ Expr Parser::parseCall() {
 	getToken(); // Eat function name
 
 	auto param = std::find(env_.params_.rbegin(), env_.params_.rend(), name);
-	if (param != env_.params_.rend()) {
+	if (param != env_.params_.rend()) { // Argument call
 		return Call(std::move(name), 0);
 	}
 
@@ -49,7 +49,7 @@ Expr Parser::parseCall() {
 	if (def == env_.definitions_.end()) {
 		throw CodegenException("Undefined variable '" + name + "'");
 	}
-	return Call(def->second);
+	return Call(def->second, def->second->body_.params_.size());
 }
 
 Expr Parser::parseExpr(int prec) {
@@ -98,8 +98,8 @@ Expr Parser::parsePrimary() {
 	
 	if (expr.type() == typeid(Call)) {
 		Call &call = boost::get<Call>(expr);
-		int argCount = call.expectedArgs_ - call.args_.size();
-		while (argCount-- > 0 && !(token_.type == TokenType::symbol && token_.str == ")")) {
+		int argCount = call.args_.capacity() - call.args_.size();
+		while (argCount-- > 0 && token_.type != TokenType::endl && (token_.type != TokenType::symbol || token_.str != ")")) {
 			call.args_.push_back(std::move(parseExpr(99))); // Arg binds stronger than next operators
 		}
 	}
@@ -110,8 +110,10 @@ Expr Parser::parsePrimary() {
 Expr Parser::parseLambda() {
 	getToken(); // Eat '\'
 	std::vector<std::string> params;
+	int paramCount = 0;
 	while (token_.type == TokenType::identifier) {
 		params.push_back(token_.str);
+		paramCount++;
 		getToken();
 	}
 
@@ -122,9 +124,9 @@ Expr Parser::parseLambda() {
 
 	env_.params_.insert(env_.params_.end(), params.begin(), params.end());
 	Expr body = parseExpr();
-	env_.params_.resize(env_.params_.size() - params.size());
+	env_.params_.resize(env_.params_.size() - paramCount);
 
-	return Call(std::make_shared<Definition>("", std::move(params), std::move(body)));
+	return Call(Lambda(std::move(params), std::move(body)), paramCount);
 }
 
 Definition Parser::parseDef() {
@@ -147,10 +149,10 @@ Definition Parser::parseDef() {
 	}
 	getToken(); // Eat '='
 
-	std::vector<std::string> oldParams(params.begin(), params.end());
-	std::swap(oldParams, env_.params_);
-	Expr body = parseExpr();
-	std::swap(oldParams, env_.params_);
+	std::swap(params, env_.params_);
+	Expr expr = parseExpr();
+	std::swap(params, env_.params_);
 
-	return Definition(std::move(name), std::move(params), std::move(body));;
+	auto body = Lambda(std::move(params), std::move(expr));
+	return Definition(std::move(name), std::move(body));
 }

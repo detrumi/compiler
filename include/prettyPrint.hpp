@@ -14,16 +14,20 @@ public:
 	}
 
 	std::string operator()(const DefPtr &def) {
+		return print(def->body_);
+	}
+
+	std::string operator()(const Lambda &lambda) {
 		std::string result = "(";
 		result += "\\";
-		for (auto param : def->params_) {
+		for (auto param : lambda.params_) {
 			result += param + " ";
 		}
-		if (!def->params_.empty()) {
+		if (!lambda.params_.empty()) {
 			result.pop_back(); // Remove last space
 			result += ". ";
 		}
-		result += print(def->body_);
+		result += print(lambda.body_);
 		result += ")";
 		return result;
 	}
@@ -33,8 +37,11 @@ public:
 		if (!call.args_.empty()) {
 			result += "(";
 		}
+
 		if (call.target_.type() == typeid(std::string)) {
 			result += boost::get<std::string>(call.target_);
+		} else if (call.target_.type() == typeid(Lambda)) {
+			result += print(boost::get<Lambda>(call.target_));
 		} else {
 			result += print(boost::get<DefPtr>(call.target_));
 		}

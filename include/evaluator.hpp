@@ -18,16 +18,19 @@ public:
 	}
 
 	int operator()(const DefPtr &def) {
-		int result;
-		if (def->isLambda()) {
-			parameters_.insert(parameters_.end(), def->params_.begin(), def->params_.end());
-			result = eval(def->body_);
-			parameters_.resize(parameters_.size() - def->params_.size());
-		} else {
-			std::swap(def->params_, parameters_);
-			result = eval(def->body_);
-			std::swap(def->params_, parameters_);
-		}
+		std::vector<std::string> params;
+
+		std::swap(params, parameters_);
+		int result = eval(def->body_);
+		std::swap(params, parameters_);
+
+		return result;
+	}
+
+	int operator()(const Lambda &lambda) {
+		parameters_.insert(parameters_.end(), lambda.params_.begin(), lambda.params_.end());
+		int result = eval(lambda.body_);
+		parameters_.resize(parameters_.size() - lambda.params_.size());
 		return result;
 	}
 
@@ -52,10 +55,16 @@ public:
 				}
 				throw CodegenException("Unknown argument '" + name + "'");
 			}
-		} else { // Definition
+		} else { // Definition or lambda
+			int result;
 			std::vector<Expr> args = std::vector<Expr>(call.args_);
+			
 			std::swap(args, arguments_);
-			int result = eval(boost::get<DefPtr>(call.target_));
+			if (call.target_.type() == typeid(Lambda)) {
+				result = eval(boost::get<Lambda>(call.target_));
+			} else {
+				result = eval(boost::get<DefPtr>(call.target_));
+			}
 			std::swap(arguments_, args);
 			return result;
 		}
